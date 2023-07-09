@@ -7,17 +7,31 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class AppendingVersion extends AbstractList<String> implements Comparable<AppendingVersion> {
-    private final String[] labels;
+    private final String[] identifiers;
     private final AtomicReference<String> text = new AtomicReference<>(null);
 
     @ParametersAreNullableByDefault
-    private AppendingVersion(String... labels) {
-        if (labels == null) {
-            this.labels = new String[0];
+    private AppendingVersion(String... identifiers) {
+        if (identifiers == null) {
+            this.identifiers = new String[0];
         } else {
-            this.labels = new String[labels.length];
-            System.arraycopy(labels, 0, this.labels, 0, labels.length);
+            this.identifiers = new String[identifiers.length];
+            System.arraycopy(identifiers, 0, this.identifiers, 0, identifiers.length);
         }
+    }
+
+    public static AppendingVersion getAppendix(String label) {
+        if (label == null) {
+            return null;
+        }
+        String[] subLabels = label.split("\\.");
+        for (String subLabel : subLabels) {
+            if (!ModVersion.PATTERN_ALPHA_NUM.matcher(subLabel).matches() && !ModVersion.PATTERN_PURE_NUM.matcher(subLabel).matches()) {
+                System.out.println("[Invalid] - PATTERN_ALPHA_NUM");
+                return null;
+            }
+        }
+        return new AppendingVersion(subLabels);
     }
 
     /**
@@ -54,12 +68,12 @@ public class AppendingVersion extends AbstractList<String> implements Comparable
 
     @ParametersAreNonnullByDefault
     public static boolean is_pure_numeric(String section) {
-        return section.matches("^[0-9]+$");
+        return ModVersion.PATTERN_LAZY_NUM.matcher(section).matches();
     }
 
     @Override
     public int size() {
-        return labels.length;
+        return identifiers.length;
     }
 
     @Override
@@ -67,11 +81,11 @@ public class AppendingVersion extends AbstractList<String> implements Comparable
         synchronized (text) {
             if (text.get() == null) {
                 StringBuilder builder = new StringBuilder();
-                if (0 < labels.length) {
-                    builder.append(labels[0]);
+                if (0 < identifiers.length) {
+                    builder.append(identifiers[0]);
                 }
-                for (int i = 1; i < labels.length; ++i) {
-                    builder.append('.').append(labels[i]);
+                for (int i = 1; i < identifiers.length; ++i) {
+                    builder.append('.').append(identifiers[i]);
                 }
                 text.set(builder.toString());
             }
@@ -82,20 +96,20 @@ public class AppendingVersion extends AbstractList<String> implements Comparable
     @Override
     @ParametersAreNonnullByDefault
     public int compareTo(AppendingVersion that) {
-        int minLength = Math.min(labels.length, that.labels.length);
+        int minLength = Math.min(identifiers.length, that.identifiers.length);
         for (int i = 0; i < minLength; ++i) {
-            int flag = compare_section(labels[i], that.labels[i]);
+            int flag = compare_section(identifiers[i], that.identifiers[i]);
             if (flag != 0) {
                 return flag;
             }
         }
-        return Integer.compare(labels.length, that.labels.length);
+        return Integer.compare(identifiers.length, that.identifiers.length);
     }
 
     @Override
     public String get(int index) {
-        if (index < labels.length && index >= 0) {
-            return labels[index];
+        if (index < identifiers.length && index >= 0) {
+            return identifiers[index];
         } else {
             return null;
         }
@@ -107,7 +121,7 @@ public class AppendingVersion extends AbstractList<String> implements Comparable
             return true;
         } else if (that instanceof AppendingVersion) {
             AppendingVersion version = (AppendingVersion) that;
-            return Arrays.equals(labels, version.labels);
+            return Arrays.equals(identifiers, version.identifiers);
         } else {
             return false;
         }
@@ -115,6 +129,6 @@ public class AppendingVersion extends AbstractList<String> implements Comparable
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(labels);
+        return Arrays.hashCode(identifiers);
     }
 }

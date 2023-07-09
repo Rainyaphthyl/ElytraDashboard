@@ -9,11 +9,13 @@ import java.util.regex.Pattern;
  * <a href="https://semver.org/">Semantic Versioning 2.0.0</a>
  */
 public class ModVersion implements Comparable<ModVersion> {
-    private static final Pattern PATTERN_CORE_SEC = Pattern.compile("^0|([1-9][0-9]*)$");
-    private static final Pattern PATTERN_FULL = Pattern.compile("^([^-+]+)-([^-+]+)\\+([^-+]+)$");
-    private static final Pattern PATTERN_WITH_PRE = Pattern.compile("^([^-+]+)-([^-+]+)$");
-    private static final Pattern PATTERN_WITH_BUILD = Pattern.compile("^([^-+]+)\\+([^-+]+)$");
-    private static final Pattern PATTERN_SIMPLE = Pattern.compile("^[^-+]+$");
+    public static final Pattern PATTERN_ALPHA_NUM = Pattern.compile("^[A-Za-z-][0-9A-Za-z-]*$");
+    public static final Pattern PATTERN_PURE_NUM = Pattern.compile("^0|([1-9][0-9]*)$");
+    public static final Pattern PATTERN_LAZY_NUM = Pattern.compile("^[0-9]+$");
+    public static final Pattern PATTERN_FULL = Pattern.compile("^([0-9.]+)-([0-9A-Za-z-.]+)\\+([0-9A-Za-z-.]+)$");
+    public static final Pattern PATTERN_WITH_PRE = Pattern.compile("^([0-9.]+)-([0-9A-Za-z-.]+)$");
+    public static final Pattern PATTERN_WITH_BUILD = Pattern.compile("^([0-9.]+)\\+([0-9A-Za-z-.]+)$");
+    public static final Pattern PATTERN_SIMPLE = Pattern.compile("^[0-9.]+$");
     private final int major;
     private final int minor;
     private final int patch;
@@ -65,7 +67,7 @@ public class ModVersion implements Comparable<ModVersion> {
         int[] coreNums = new int[coreSecs.length];
         try {
             for (int i = 0; i < coreNums.length; ++i) {
-                if (PATTERN_CORE_SEC.matcher(coreSecs[i]).matches()) {
+                if (PATTERN_PURE_NUM.matcher(coreSecs[i]).matches()) {
                     coreNums[i] = Integer.parseInt(coreSecs[i]);
                 } else {
                     System.out.println("[Invalid] - PATTERN_CORE_SEC");
@@ -77,7 +79,8 @@ public class ModVersion implements Comparable<ModVersion> {
             return null;
         }
         System.out.println(core + " " + pre + " " + build);
-        return new ModVersion(coreNums[0], coreNums[1], coreNums[2], null);
+        AppendingVersion appendix = AppendingVersion.getAppendix(pre);
+        return new ModVersion(coreNums[0], coreNums[1], coreNums[2], appendix);
     }
 
     @Override
