@@ -26,6 +26,7 @@ apply plugin: 'org.spongepowered.mixin'
 
 group = 'io.github.rainyaphthyl'
 archivesBaseName = 'elytra-dashboard'
+version = project.modVersion
 
 minecraft {
     version = project.mcVersion
