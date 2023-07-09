@@ -33,12 +33,10 @@ public class AppendingVersion extends AbstractList<Comparable<?>> implements Com
                 } else if (VersionPatterns.PATTERN_PURE_NUM.matcher(subLabels[i]).matches()) {
                     identifiers[i] = Integer.valueOf(subLabels[i]);
                 } else {
-                    System.out.println("[Invalid] - PATTERN_ALPHA_NUM");
                     return null;
                 }
             }
         } catch (NumberFormatException e) {
-            System.out.println("[Invalid] - PATTERN_PURE_NUM");
             return null;
         }
         return new AppendingVersion(identifiers);

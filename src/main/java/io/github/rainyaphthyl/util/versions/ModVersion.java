@@ -48,12 +48,10 @@ public class ModVersion implements Comparable<ModVersion> {
             pre = null;
             build = null;
         } else {
-            System.out.println("[Invalid] - pattern total");
             return null;
         }
         String[] coreSecs = core.split("\\.");
         if (coreSecs.length != 3) {
-            System.out.println("[Invalid] - coreSecs.length");
             return null;
         }
         int[] coreNums = new int[coreSecs.length];
@@ -62,15 +60,12 @@ public class ModVersion implements Comparable<ModVersion> {
                 if (VersionPatterns.PATTERN_PURE_NUM.matcher(coreSecs[i]).matches()) {
                     coreNums[i] = Integer.parseInt(coreSecs[i]);
                 } else {
-                    System.out.println("[Invalid] - PATTERN_CORE_SEC");
                     return null;
                 }
             }
         } catch (NumberFormatException e) {
-            System.out.println("[Invalid] - NumberFormatException");
             return null;
         }
-        System.out.println(core + " " + pre + " " + build);
         AppendingVersion appendix = AppendingVersion.getAppendix(pre);
         return new ModVersion(coreNums[0], coreNums[1], coreNums[2], appendix);
     }
