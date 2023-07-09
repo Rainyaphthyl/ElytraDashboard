@@ -43,4 +43,5 @@ bin/
 
 /.idea/
 /run/
+/libs/
 *.number
