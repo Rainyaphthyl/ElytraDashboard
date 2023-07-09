@@ -3,73 +3,17 @@ package io.github.rainyaphthyl.util.versions;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.ParametersAreNullableByDefault;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Pattern;
 
 /**
  * <a href="https://semver.org/">Semantic Versioning 2.0.0</a>
- *
- * <pre>{@code <valid semver> ::= <version core>
- *                  | <version core> "-" <pre-release>
- *                  | <version core> "+" <build>
- *                  | <version core> "-" <pre-release> "+" <build>
- *
- * <version core> ::= <major> "." <minor> "." <patch>
- *
- * <major> ::= <numeric identifier>
- *
- * <minor> ::= <numeric identifier>
- *
- * <patch> ::= <numeric identifier>
- *
- * <pre-release> ::= <dot-separated pre-release identifiers>
- *
- * <dot-separated pre-release identifiers> ::= <pre-release identifier>
- *                                           | <pre-release identifier> "." <dot-separated pre-release identifiers>
- *
- * <build> ::= <dot-separated build identifiers>
- *
- * <dot-separated build identifiers> ::= <build identifier>
- *                                     | <build identifier> "." <dot-separated build identifiers>
- *
- * <pre-release identifier> ::= <alphanumeric identifier>
- *                            | <numeric identifier>
- *
- * <build identifier> ::= <alphanumeric identifier>
- *                      | <digits>
- *
- * <alphanumeric identifier> ::= <non-digit>
- *                             | <non-digit> <identifier characters>
- *                             | <identifier characters> <non-digit>
- *                             | <identifier characters> <non-digit> <identifier characters>
- *
- * <numeric identifier> ::= "0"
- *                        | <positive digit>
- *                        | <positive digit> <digits>
- *
- * <identifier characters> ::= <identifier character>
- *                           | <identifier character> <identifier characters>
- *
- * <identifier character> ::= <digit>
- *                          | <non-digit>
- *
- * <non-digit> ::= <letter>
- *               | "-"
- *
- * <digits> ::= <digit>
- *            | <digit> <digits>
- *
- * <digit> ::= "0"
- *           | <positive digit>
- *
- * <positive digit> ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
- *
- * <letter> ::= "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J"
- *            | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T"
- *            | "U" | "V" | "W" | "X" | "Y" | "Z" | "a" | "b" | "c" | "d"
- *            | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n"
- *            | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x"
- *            | "y" | "z"}</pre>
  */
 public class ModVersion implements Comparable<ModVersion> {
+    private static final Pattern PATTERN_CORE_SEC = Pattern.compile("^0|([1-9][0-9]*)$");
+    private static final Pattern PATTERN_FULL = Pattern.compile("^([^-+]+)-([^-+]+)\\+([^-+]+)$");
+    private static final Pattern PATTERN_WITH_PRE = Pattern.compile("^([^-+]+)-([^-+]+)$");
+    private static final Pattern PATTERN_WITH_BUILD = Pattern.compile("^([^-+]+)\\+([^-+]+)$");
+    private static final Pattern PATTERN_SIMPLE = Pattern.compile("^[^-+]+$");
     private final int major;
     private final int minor;
     private final int patch;
@@ -88,7 +32,52 @@ public class ModVersion implements Comparable<ModVersion> {
         if (versionName == null) {
             return null;
         }
-        return new ModVersion(0, 0, 0, null);
+        String core, pre, build;
+        if (PATTERN_FULL.matcher(versionName).matches()) {
+            int indexPre = versionName.indexOf('-');
+            int indexBuild = versionName.indexOf('+');
+            core = versionName.substring(0, indexPre);
+            pre = versionName.substring(indexPre + 1, indexBuild);
+            build = versionName.substring(indexBuild + 1);
+        } else if (PATTERN_WITH_PRE.matcher(versionName).matches()) {
+            int indexPre = versionName.indexOf('-');
+            core = versionName.substring(0, indexPre);
+            pre = versionName.substring(indexPre + 1);
+            build = null;
+        } else if (PATTERN_WITH_BUILD.matcher(versionName).matches()) {
+            int indexBuild = versionName.indexOf('+');
+            core = versionName.substring(0, indexBuild);
+            pre = null;
+            build = versionName.substring(indexBuild + 1);
+        } else if (PATTERN_SIMPLE.matcher(versionName).matches()) {
+            core = versionName;
+            pre = null;
+            build = null;
+        } else {
+            System.out.println("[Invalid] - pattern total");
+            return null;
+        }
+        String[] coreSecs = core.split("\\.");
+        if (coreSecs.length != 3) {
+            System.out.println("[Invalid] - coreSecs.length");
+            return null;
+        }
+        int[] coreNums = new int[coreSecs.length];
+        try {
+            for (int i = 0; i < coreNums.length; ++i) {
+                if (PATTERN_CORE_SEC.matcher(coreSecs[i]).matches()) {
+                    coreNums[i] = Integer.parseInt(coreSecs[i]);
+                } else {
+                    System.out.println("[Invalid] - PATTERN_CORE_SEC");
+                    return null;
+                }
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("[Invalid] - NumberFormatException");
+            return null;
+        }
+        System.out.println(core + " " + pre + " " + build);
+        return new ModVersion(coreNums[0], coreNums[1], coreNums[2], null);
     }
 
     @Override
