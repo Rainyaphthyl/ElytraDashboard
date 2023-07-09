@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.5.3",
   "package": "io.github.rainyaphthyl.mixin",
-  "refmap": "mixins.elytra-dashboard.refmap.json",
+  "refmap": "mixins.elytradashboard.refmap.json",
   "mixins": [
   ],
   "injectors": {

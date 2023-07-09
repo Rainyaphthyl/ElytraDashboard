@@ -25,7 +25,7 @@ apply plugin: 'net.minecraftforge.gradle.liteloader'
 apply plugin: 'org.spongepowered.mixin'
 
 group = 'io.github.rainyaphthyl'
-archivesBaseName = 'elytra-dashboard'
+archivesBaseName = 'elytradashboard'
 version = project.modVersion
 
 minecraft {
@@ -36,7 +36,7 @@ minecraft {
 
 sourceSets {
     main {
-        ext.refMap = "mixins.elytra-dashboard.refmap.json"
+        ext.refMap = "mixins.elytradashboard.refmap.json"
     }
 }
 
