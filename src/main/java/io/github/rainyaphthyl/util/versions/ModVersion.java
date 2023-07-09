@@ -3,19 +3,11 @@ package io.github.rainyaphthyl.util.versions;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.ParametersAreNullableByDefault;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Pattern;
 
 /**
  * <a href="https://semver.org/">Semantic Versioning 2.0.0</a>
  */
 public class ModVersion implements Comparable<ModVersion> {
-    public static final Pattern PATTERN_ALPHA_NUM = Pattern.compile("^[A-Za-z-][0-9A-Za-z-]*$");
-    public static final Pattern PATTERN_PURE_NUM = Pattern.compile("^0|([1-9][0-9]*)$");
-    public static final Pattern PATTERN_LAZY_NUM = Pattern.compile("^[0-9]+$");
-    public static final Pattern PATTERN_FULL = Pattern.compile("^([0-9.]+)-([0-9A-Za-z-.]+)\\+([0-9A-Za-z-.]+)$");
-    public static final Pattern PATTERN_WITH_PRE = Pattern.compile("^([0-9.]+)-([0-9A-Za-z-.]+)$");
-    public static final Pattern PATTERN_WITH_BUILD = Pattern.compile("^([0-9.]+)\\+([0-9A-Za-z-.]+)$");
-    public static final Pattern PATTERN_SIMPLE = Pattern.compile("^[0-9.]+$");
     private final int major;
     private final int minor;
     private final int patch;
@@ -35,23 +27,23 @@ public class ModVersion implements Comparable<ModVersion> {
             return null;
         }
         String core, pre, build;
-        if (PATTERN_FULL.matcher(versionName).matches()) {
+        if (VersionPatterns.PATTERN_FULL.matcher(versionName).matches()) {
             int indexPre = versionName.indexOf('-');
             int indexBuild = versionName.indexOf('+');
             core = versionName.substring(0, indexPre);
             pre = versionName.substring(indexPre + 1, indexBuild);
             build = versionName.substring(indexBuild + 1);
-        } else if (PATTERN_WITH_PRE.matcher(versionName).matches()) {
+        } else if (VersionPatterns.PATTERN_WITH_PRE.matcher(versionName).matches()) {
             int indexPre = versionName.indexOf('-');
             core = versionName.substring(0, indexPre);
             pre = versionName.substring(indexPre + 1);
             build = null;
-        } else if (PATTERN_WITH_BUILD.matcher(versionName).matches()) {
+        } else if (VersionPatterns.PATTERN_WITH_BUILD.matcher(versionName).matches()) {
             int indexBuild = versionName.indexOf('+');
             core = versionName.substring(0, indexBuild);
             pre = null;
             build = versionName.substring(indexBuild + 1);
-        } else if (PATTERN_SIMPLE.matcher(versionName).matches()) {
+        } else if (VersionPatterns.PATTERN_SIMPLE.matcher(versionName).matches()) {
             core = versionName;
             pre = null;
             build = null;
@@ -67,7 +59,7 @@ public class ModVersion implements Comparable<ModVersion> {
         int[] coreNums = new int[coreSecs.length];
         try {
             for (int i = 0; i < coreNums.length; ++i) {
-                if (PATTERN_PURE_NUM.matcher(coreSecs[i]).matches()) {
+                if (VersionPatterns.PATTERN_PURE_NUM.matcher(coreSecs[i]).matches()) {
                     coreNums[i] = Integer.parseInt(coreSecs[i]);
                 } else {
                     System.out.println("[Invalid] - PATTERN_CORE_SEC");

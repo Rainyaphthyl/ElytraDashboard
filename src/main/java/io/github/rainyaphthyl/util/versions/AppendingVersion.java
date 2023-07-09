@@ -6,16 +6,16 @@ import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class AppendingVersion extends AbstractList<String> implements Comparable<AppendingVersion> {
-    private final String[] identifiers;
+public class AppendingVersion extends AbstractList<Comparable<?>> implements Comparable<AppendingVersion> {
+    private final Comparable<?>[] identifiers;
     private final AtomicReference<String> text = new AtomicReference<>(null);
 
     @ParametersAreNullableByDefault
-    private AppendingVersion(String... identifiers) {
+    private AppendingVersion(Comparable<?>... identifiers) {
         if (identifiers == null) {
-            this.identifiers = new String[0];
+            this.identifiers = new Comparable<?>[0];
         } else {
-            this.identifiers = new String[identifiers.length];
+            this.identifiers = new Comparable<?>[identifiers.length];
             System.arraycopy(identifiers, 0, this.identifiers, 0, identifiers.length);
         }
     }
@@ -25,13 +25,23 @@ public class AppendingVersion extends AbstractList<String> implements Comparable
             return null;
         }
         String[] subLabels = label.split("\\.");
-        for (String subLabel : subLabels) {
-            if (!ModVersion.PATTERN_ALPHA_NUM.matcher(subLabel).matches() && !ModVersion.PATTERN_PURE_NUM.matcher(subLabel).matches()) {
-                System.out.println("[Invalid] - PATTERN_ALPHA_NUM");
-                return null;
+        Comparable<?>[] identifiers = new Comparable[subLabels.length];
+        try {
+            for (int i = 0; i < subLabels.length; ++i) {
+                if (VersionPatterns.PATTERN_ALPHA_NUM.matcher(subLabels[i]).matches()) {
+                    identifiers[i] = subLabels[i];
+                } else if (VersionPatterns.PATTERN_PURE_NUM.matcher(subLabels[i]).matches()) {
+                    identifiers[i] = Integer.valueOf(subLabels[i]);
+                } else {
+                    System.out.println("[Invalid] - PATTERN_ALPHA_NUM");
+                    return null;
+                }
             }
+        } catch (NumberFormatException e) {
+            System.out.println("[Invalid] - PATTERN_PURE_NUM");
+            return null;
         }
-        return new AppendingVersion(subLabels);
+        return new AppendingVersion(identifiers);
     }
 
     /**
@@ -50,25 +60,18 @@ public class AppendingVersion extends AbstractList<String> implements Comparable
     }
 
     @ParametersAreNonnullByDefault
-    public static int compare_section(String s1, String s2) {
-        boolean pure1 = is_pure_numeric(s1);
-        boolean pure2 = is_pure_numeric(s2);
+    public static int compare_section(Comparable<?> s1, Comparable<?> s2) {
+        boolean pure1 = s1 instanceof Integer;
+        boolean pure2 = s2 instanceof Integer;
         if (pure1 == pure2) {
             if (pure1) {
-                int num1 = Integer.parseInt(s1);
-                int num2 = Integer.parseInt(s2);
-                return Integer.compare(num1, num2);
+                return ((Integer) s1).compareTo((Integer) s2);
             } else {
-                return s1.compareTo(s2);
+                return String.valueOf(s1).compareTo(String.valueOf(s2));
             }
         } else {
             return pure1 ? -1 : 1;
         }
-    }
-
-    @ParametersAreNonnullByDefault
-    public static boolean is_pure_numeric(String section) {
-        return ModVersion.PATTERN_LAZY_NUM.matcher(section).matches();
     }
 
     @Override
@@ -96,6 +99,9 @@ public class AppendingVersion extends AbstractList<String> implements Comparable
     @Override
     @ParametersAreNonnullByDefault
     public int compareTo(AppendingVersion that) {
+        if (this == that) {
+            return 0;
+        }
         int minLength = Math.min(identifiers.length, that.identifiers.length);
         for (int i = 0; i < minLength; ++i) {
             int flag = compare_section(identifiers[i], that.identifiers[i]);
@@ -107,7 +113,7 @@ public class AppendingVersion extends AbstractList<String> implements Comparable
     }
 
     @Override
-    public String get(int index) {
+    public Comparable<?> get(int index) {
         if (index < identifiers.length && index >= 0) {
             return identifiers[index];
         } else {
