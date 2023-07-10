@@ -48,8 +48,8 @@ litemod {
     json {
         //name = "test"
         mcversion = project.targetVersion
-        description = "An example litemod project which draws a clock in-game"
-        mixinConfigs += "mixins.example.json"
+        description = "A dashboard displaying speed, height, and navigation during elytra aviation"
+        mixinConfigs += "mixins.elytradashboard.json"
     }
 }
 
