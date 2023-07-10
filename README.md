@@ -24,7 +24,8 @@ _Work in progress_
 
 ### Setup and Edit
 
-Clone the repository.
+- Clone the repository.
+- You MAY have to run `gradle setupDecompWorkspace`.
 
 ### Build and Release
 
