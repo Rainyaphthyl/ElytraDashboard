@@ -9,13 +9,13 @@ import java.io.File;
 public class LiteModElytraDashboard implements LiteMod {
     private static final String NAME = "Elytra Dashboard";
     private static final String VERSION = "0.1.0";
-    private static ModVersion VERSION_OBJ = null;
+    private static ModVersion versionObj = null;
 
-    public static ModVersion get_version_obj() {
-        if (VERSION_OBJ == null) {
-            VERSION_OBJ = ModVersion.getVersion(VERSION);
+    public static ModVersion getVersionObj() {
+        if (versionObj == null) {
+            versionObj = ModVersion.getVersion(VERSION);
         }
-        return VERSION_OBJ;
+        return versionObj;
     }
 
     @Override
