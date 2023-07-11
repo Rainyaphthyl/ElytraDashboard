@@ -13,7 +13,7 @@ import java.io.File;
 @ExposableOptions(strategy = ConfigStrategy.Unversioned, filename = "elytradashboard.json")
 public class LiteModElytraDashboard implements LiteMod, Configurable {
     private static final String NAME = "Elytra Dashboard";
-    private static final String VERSION = "0.1.0";
+    private static final String VERSION = "0.1.1-alpha.0";
     private static ModVersion versionObj = null;
 
     public static ModVersion getVersionObj() {
