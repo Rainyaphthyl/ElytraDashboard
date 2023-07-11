@@ -1,4 +1,4 @@
-package io.github.rainyaphthyl.util.versions;
+package io.github.rainyaphthyl.elytradashboard.util.versions;
 
 import java.util.regex.Pattern;
 

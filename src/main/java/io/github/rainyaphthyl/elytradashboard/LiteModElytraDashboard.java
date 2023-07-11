@@ -1,7 +1,7 @@
-package io.github.rainyaphthyl;
+package io.github.rainyaphthyl.elytradashboard;
 
 import com.mumfrey.liteloader.LiteMod;
-import io.github.rainyaphthyl.util.versions.ModVersion;
+import io.github.rainyaphthyl.elytradashboard.util.versions.ModVersion;
 
 import java.io.File;
 

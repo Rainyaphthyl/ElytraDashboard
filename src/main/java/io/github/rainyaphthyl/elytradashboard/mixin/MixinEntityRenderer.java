@@ -1,4 +1,4 @@
-package io.github.rainyaphthyl.mixin;
+package io.github.rainyaphthyl.elytradashboard.mixin;
 
 import com.mumfrey.liteloader.Tickable;
 import net.minecraft.client.Minecraft;
@@ -28,8 +28,6 @@ public abstract class MixinEntityRenderer implements Tickable {
     @Shadow
     @Final
     private Minecraft mc;
-    @Shadow
-    private long prevFrameTime;
     @Unique
     private float elytraDashboard$deltaYaw = 0.0F;
     @Unique
