@@ -25,7 +25,7 @@ apply plugin: 'net.minecraftforge.gradle.liteloader'
 apply plugin: 'org.spongepowered.mixin'
 
 group = 'io.github.rainyaphthyl'
-archivesBaseName = 'elytradashboard'
+//archivesBaseName = "mc${project.mcVersionOut}-${project.modFileName}"
 version = project.modVersion
 
 minecraft {
