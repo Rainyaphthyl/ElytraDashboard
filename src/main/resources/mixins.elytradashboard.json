@@ -1,9 +1,10 @@
 {
   "required": true,
   "minVersion": "0.5.3",
-  "package": "io.github.rainyaphthyl.mixin",
+  "package": "io.github.rainyaphthyl.elytradashboard.mixin",
   "refmap": "mixins.elytradashboard.refmap.json",
   "mixins": [
+    "MixinEntityRenderer"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,4 +1,4 @@
-package io.github.rainyaphthyl.util.versions;
+package io.github.rainyaphthyl.elytradashboard.util.versions;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.ParametersAreNullableByDefault;

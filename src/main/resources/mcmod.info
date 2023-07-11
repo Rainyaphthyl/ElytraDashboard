@@ -1,0 +1,18 @@
+[
+  {
+    "modid": "elytra_dashboard",
+    "name": "Elytra Dashboard",
+    "description": "A dashboard displaying speed, height, and navigation during elytra aviation.",
+    "version": "${modVersion}",
+    "mcversion": "${mcVersion}",
+    "url": "https://github.com/Rainyaphthyl/ElytraDashboard",
+    "updateUrl": "",
+    "authorList": [
+      "Naftalluvia"
+    ],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
