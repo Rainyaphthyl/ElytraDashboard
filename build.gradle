@@ -47,8 +47,9 @@ mixin {
 litemod {
     json {
         //name = "test"
-        mcversion = project.targetVersion
-        description = "A dashboard displaying speed, height, and navigation during elytra aviation"
+        mcversion = project.mcVersion
+        description = "A dashboard displaying speed, height, and navigation during elytra aviation."
+        author = project.author
         mixinConfigs += "mixins.elytradashboard.json"
     }
 }
