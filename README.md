@@ -18,14 +18,16 @@ This is a client-side mod for Minecraft 1.12.2, powered by liteloader.
 
 ### Features and Functions
 
-Work in progress.
+_Work in progress_
 
 ## Development
 
-### Setup
+### Setup and Edit
 
-Clone the repository.
+- Clone the repository.
+- You MAY have to run `gradle setupDecompWorkspace`.
 
-### Release
+### Build and Release
 
-Run `gradle build`, and the release will be a file with postfix `.litemod` in the `build/libs/` directory.
+- Run `gradle build`, and the release will be a file with postfix `.litemod` in the `build/libs/` directory.
+- Run `gradle runClient` to test the mod with IDE.
