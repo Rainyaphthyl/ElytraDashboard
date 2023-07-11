@@ -59,5 +59,36 @@ litemod {
 
 jar {
     // The litemod task above generates the litemod.json dynamically, you can replace it with a resource if you want more control
+    archivesBaseName = "${modFileName}"
+    classifier = "mc${mcVersionOut}"
+    baseName = "mod-${archivesBaseName}"
+    // Remove the "-mc1.12" suffix from the file name
+    //classifier = ""
+    // Don't append a 'mod-' filename prefix >_>
+    //baseName = archivesBaseName
     from litemod.outputs
+}
+
+
+processResources {
+    // Exclude the GIMP image files
+    //exclude '**/*.xcf'
+    //exclude '**/xcf'
+
+    // this will ensure that this task is redone when the versions change.
+    inputs.property 'modVersion', project.modVersion
+    inputs.property 'mcVersion', project.mcVersion
+
+    // replace stuff in mcmod.info, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+
+        // replace version and mcversion
+        expand 'modVersion': project.modVersion, 'mcVersion': project.mcVersion
+    }
+
+    // copy everything else, thats not the mcmod.info
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
 }
