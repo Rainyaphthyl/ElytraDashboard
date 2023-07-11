@@ -46,7 +46,8 @@ mixin {
 
 litemod {
     json {
-        //name = "elytradashboard"
+        //noinspection GroovyAccessibility
+        name = project.modId
         displayName = project.modName
         version = project.modVersion
         mcversion = project.mcVersion
