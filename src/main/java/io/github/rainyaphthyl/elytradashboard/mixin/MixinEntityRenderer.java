@@ -29,7 +29,7 @@ public abstract class MixinEntityRenderer implements Tickable {
      */
     @Inject(method = "updateRenderer()V", at = @At("HEAD"))
     private void updateRotationKey(CallbackInfo ci) {
-        if (mc.player.isElytraFlying()) {
+        if (KeyRotator.keyboardElytraEnabled && mc.player.isElytraFlying()) {
             GameSettings gameSettings = mc.gameSettings;
             elytraDashboard$rotator.updateTickRotation(gameSettings);
             System.err.println("Delta(Rotation): " + elytraDashboard$rotator.getDeltaYaw() + " / " + elytraDashboard$rotator.getDeltaPitch());
@@ -45,16 +45,18 @@ public abstract class MixinEntityRenderer implements Tickable {
             target = "Lnet/minecraft/client/entity/EntityPlayerSP;turn(FF)V", shift = At.Shift.BEFORE)
     )
     private void rotateByKeyboard(float partialTicks, long nanoTime, CallbackInfo ci) {
-        EntityPlayerSP player = mc.player;
-        if (player.isElytraFlying()) {
-            int i = 1;
-            if (mc.gameSettings.invertMouse) {
-                i = -1;
+        if (KeyRotator.keyboardElytraEnabled) {
+            EntityPlayerSP player = mc.player;
+            if (player.isElytraFlying()) {
+                int i = 1;
+                if (mc.gameSettings.invertMouse) {
+                    i = -1;
+                }
+                float[] partialDeltas = elytraDashboard$rotator.updateFrameRotation(elytraDashboard$bufferDeltas, partialTicks);
+                float partialDYaw = partialDeltas[0];
+                float partialDPitch = partialDeltas[1];
+                player.turn(partialDYaw, partialDPitch * (float) i);
             }
-            float[] partialDeltas = elytraDashboard$rotator.updateFrameRotation(elytraDashboard$bufferDeltas, partialTicks);
-            float partialDYaw = partialDeltas[0];
-            float partialDPitch = partialDeltas[1];
-            player.turn(partialDYaw, partialDPitch * (float) i);
         }
     }
 }

@@ -1,5 +1,7 @@
 package io.github.rainyaphthyl.elytradashboard.input;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import net.minecraft.client.settings.GameSettings;
 
 import javax.annotation.Nonnull;
@@ -12,6 +14,9 @@ public class KeyRotator {
     public static final float SCALE_FACTOR = 0.6F;
     public static final float SCALE_OFFSET = 0.2F;
     public static final float INERTIA = 0.6F;
+    @Expose
+    @SerializedName("enable_keyboard_elytra")
+    public static boolean keyboardElytraEnabled = false;
     private float deltaYaw = 0.0F;
     private float deltaPitch = 0.0F;
     private float prevDeltaYaw = 0.0F;
