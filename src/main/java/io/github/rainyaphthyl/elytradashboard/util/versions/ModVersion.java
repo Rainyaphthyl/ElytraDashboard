@@ -22,6 +22,7 @@ public class ModVersion implements Comparable<ModVersion> {
         this.preLabels = preLabels;
     }
 
+    @SuppressWarnings({"unused", "UnusedAssignment"})
     public static ModVersion getVersion(String versionName) {
         if (versionName == null) {
             return null;
