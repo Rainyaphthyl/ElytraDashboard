@@ -45,3 +45,4 @@ bin/
 /run/
 /libs/
 *.number
+*.zip
