@@ -15,7 +15,7 @@ import java.util.Locale;
 
 public class LiteModElytraDashboard implements LiteMod, Configurable {
     public static final String NAME = "Elytra Dashboard";
-    public static final String VERSION = "0.1.1-alpha.0";
+    public static final String VERSION = "0.1.1-alpha.1";
     private static ModVersion versionObj = null;
 
     @SuppressWarnings("unused")

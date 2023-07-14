@@ -29,5 +29,12 @@ _Work in progress_
 
 ### Build and Release
 
+Before release, make sure the mod version is correct:
+
+- [gradle.properties](gradle.properties)
+- [LiteModElytraDashboard.java](src/main/java/io/github/rainyaphthyl/elytradashboard/LiteModElytraDashboard.java)
+
+Build or run by one of the following commands:
+
 - Run `gradle build`, and the release will be a file with postfix `.litemod` in the `build/libs/` directory.
 - Run `gradle runClient` to test the mod with IDE.
