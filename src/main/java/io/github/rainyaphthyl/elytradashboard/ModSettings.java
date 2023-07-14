@@ -14,6 +14,8 @@ import java.util.Objects;
 public class ModSettings implements Exposable {
     public static final ModSettings INSTANCE = new ModSettings();
     public static final String FILE_NAME = "elytradashboard.json";
+    public static final String BACKUP_NAME = "elytradashboard.json.backup";
+    public static final String ARCHIVE_POSTFIX = "elytradashboard.json.archive";
     private static final int FIELD_MASK = Modifier.PUBLIC | Modifier.PROTECTED | Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL | Modifier.TRANSIENT;
     /**
      * The setting field should be {@code public, non-static, non-final, non-transient}

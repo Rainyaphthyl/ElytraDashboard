@@ -4,9 +4,14 @@ import com.mumfrey.liteloader.Configurable;
 import com.mumfrey.liteloader.LiteMod;
 import com.mumfrey.liteloader.core.LiteLoader;
 import com.mumfrey.liteloader.modconfig.ConfigPanel;
-import io.github.rainyaphthyl.elytradashboard.util.versions.ModVersion;
+import io.github.rainyaphthyl.elytradashboard.util.FileHelper;
+import io.github.rainyaphthyl.elytradashboard.util.version.ModVersion;
 
 import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class LiteModElytraDashboard implements LiteMod, Configurable {
     public static final String NAME = "Elytra Dashboard";
@@ -34,8 +39,26 @@ public class LiteModElytraDashboard implements LiteMod, Configurable {
     @Override
     public void init(File configPath) {
         LiteLoader liteLoader = LiteLoader.getInstance();
+        if (configPath != null && configPath.isDirectory()) {
+            File configFile = new File(configPath, ModSettings.FILE_NAME);
+            File backupFile = new File(configPath, ModSettings.BACKUP_NAME);
+            try {
+                if (configFile.exists() && configFile.canRead()) {
+                    FileHelper.copyFile(configFile, backupFile);
+                } else if (backupFile.exists()) {
+                    // Protect the backup if the config is missing
+                    Date dateObj = new Date();
+                    //noinspection SpellCheckingInspection
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS.ZZZZ", Locale.CANADA_FRENCH);
+                    String dateTxt = dateFormat.format(dateObj);
+                    String archiveName = ModSettings.FILE_NAME + "." + dateTxt + "." + ModSettings.ARCHIVE_POSTFIX;
+                    FileHelper.copyFile(backupFile, new File(configPath, archiveName));
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
         liteLoader.registerExposable(getSettings(), ModSettings.FILE_NAME);
-        liteLoader.writeConfig(getSettings());
     }
 
     @Override
