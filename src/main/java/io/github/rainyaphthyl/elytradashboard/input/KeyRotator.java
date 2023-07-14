@@ -88,19 +88,14 @@ public class KeyRotator {
             float currFrame = partialTicks - prevPartialTick;
             partialDYaw = deltaYaw * currFrame;
             partialDPitch = deltaPitch * currFrame;
-            System.out.printf("Partial %.4f->%.4f: %+.6f/%+.6f\n", prevPartialTick, partialTicks,
-                    partialDYaw, partialDPitch);
         } else {
             float priorHalf = 1.0F - prevPartialTick;
             partialDYaw = prevDeltaYaw * priorHalf;
             partialDPitch = prevDeltaPitch * priorHalf;
-            System.out.printf("Tail %.4f->%.4f: %+.6f/%+.6f\n", prevPartialTick, 1.0F,
-                    partialDYaw, partialDPitch);
             float postDYaw = deltaYaw * partialTicks;
             float postDPitch = deltaPitch * partialTicks;
             partialDYaw += postDYaw;
             partialDPitch += postDPitch;
-            System.out.printf("Head %.4f->%.4f: %+.6f/%+.6f\n", 0.0F, partialTicks, postDYaw, postDPitch);
         }
         result[0] = partialDYaw;
         result[1] = partialDPitch;

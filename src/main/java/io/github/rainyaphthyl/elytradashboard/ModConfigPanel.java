@@ -7,7 +7,11 @@ import com.mumfrey.liteloader.modconfig.ConfigPanelHost;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 
+@SuppressWarnings("unused")
 public class ModConfigPanel extends AbstractConfigPanel {
+    private final ModSettings tempSettings = new ModSettings(ModSettings.INSTANCE);
+    private ModSettings mainSettings = null;
+
     /**
      * Stub for implementors, this is similar to {@link GuiScreen#initGui} and
      * consumers should add all of their controls here
@@ -19,16 +23,15 @@ public class ModConfigPanel extends AbstractConfigPanel {
         if (host == null) {
             return;
         }
-        addLabel(1, 0, 0, 200, 32, 0xFFFF55,
-                I18n.format("elytraDashboard.config.name.keyboardElytra"));
-        ModSettings settings = LiteModElytraDashboard.getSettings();
-        GuiCheckbox checkbox = addControl(new GuiCheckbox(0, 0, 32,
-                I18n.format("elytraDashboard.config.option.enabled")), control -> {
-            control.checked = !control.checked;
-            settings.keyboardElytra = control.checked;
-            LiteLoader.getInstance().writeConfig(settings);
-        });
-        checkbox.checked = settings.keyboardElytra;
+        LiteModElytraDashboard mod = host.getMod();
+        mainSettings = mod.getSettings();
+        tempSettings.syncFrom(mainSettings);
+        GuiCheckbox checkbox = addControl(new GuiCheckbox(0, 0, 32, I18n.format("elytraDashboard.config.name.keyboardElytra")),
+                control -> {
+                    control.checked = !control.checked;
+                    tempSettings.keyboardElytra = control.checked;
+                });
+        checkbox.checked = tempSettings.keyboardElytra;
     }
 
     /**
@@ -45,5 +48,11 @@ public class ModConfigPanel extends AbstractConfigPanel {
      */
     @Override
     public void onPanelHidden() {
+        if (mainSettings != null && !mainSettings.equals(tempSettings)) {
+            boolean updated = mainSettings.syncFrom(tempSettings);
+            if (updated) {
+                LiteLoader.getInstance().writeConfig(mainSettings);
+            }
+        }
     }
 }

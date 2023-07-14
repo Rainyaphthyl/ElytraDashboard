@@ -4,16 +4,13 @@ import com.mumfrey.liteloader.Configurable;
 import com.mumfrey.liteloader.LiteMod;
 import com.mumfrey.liteloader.core.LiteLoader;
 import com.mumfrey.liteloader.modconfig.ConfigPanel;
-import com.mumfrey.liteloader.modconfig.ConfigStrategy;
-import com.mumfrey.liteloader.modconfig.ExposableOptions;
 import io.github.rainyaphthyl.elytradashboard.util.versions.ModVersion;
 
 import java.io.File;
 
-@ExposableOptions(strategy = ConfigStrategy.Unversioned, filename = "elytradashboard.json")
 public class LiteModElytraDashboard implements LiteMod, Configurable {
-    private static final String NAME = "Elytra Dashboard";
-    private static final String VERSION = "0.1.1-alpha.0";
+    public static final String NAME = "Elytra Dashboard";
+    public static final String VERSION = "0.1.1-alpha.0";
     private static ModVersion versionObj = null;
 
     @SuppressWarnings("unused")
@@ -24,7 +21,8 @@ public class LiteModElytraDashboard implements LiteMod, Configurable {
         return versionObj;
     }
 
-    public static ModSettings getSettings() {
+    @SuppressWarnings("SameReturnValue")
+    public ModSettings getSettings() {
         return ModSettings.INSTANCE;
     }
 
@@ -36,7 +34,7 @@ public class LiteModElytraDashboard implements LiteMod, Configurable {
     @Override
     public void init(File configPath) {
         LiteLoader liteLoader = LiteLoader.getInstance();
-        liteLoader.registerExposable(getSettings(), "elytradashboard.json");
+        liteLoader.registerExposable(getSettings(), ModSettings.FILE_NAME);
         liteLoader.writeConfig(getSettings());
     }
 
