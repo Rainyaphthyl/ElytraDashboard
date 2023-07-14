@@ -2,12 +2,19 @@ package io.github.rainyaphthyl.elytradashboard.config;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.mumfrey.liteloader.core.LiteLoader;
 import com.mumfrey.liteloader.modconfig.ConfigStrategy;
 import com.mumfrey.liteloader.modconfig.Exposable;
 import com.mumfrey.liteloader.modconfig.ExposableOptions;
+import io.github.rainyaphthyl.elytradashboard.util.FileHelper;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Objects;
 
 @ExposableOptions(strategy = ConfigStrategy.Unversioned, filename = ModSettings.FILE_NAME)
@@ -31,6 +38,46 @@ public class ModSettings implements Exposable {
     public ModSettings(Object another) {
         if (another instanceof ModSettings) {
             syncFrom((ModSettings) another);
+        }
+    }
+
+    public static void initConfig(File configPath) {
+        LiteLoader liteLoader = LiteLoader.getInstance();
+        boolean registered = false;
+        if (configPath != null && configPath.isDirectory()) {
+            File configFile = new File(configPath, FILE_NAME);
+            File backupFile = new File(configPath, BACKUP_NAME);
+            try {
+                boolean backupRequiring = configFile.canRead();
+                boolean protectRequiring;
+                if (backupRequiring) {
+                    protectRequiring = backupFile.canRead() && configFile.length() < backupFile.length() * 0.75;
+                } else {
+                    protectRequiring = backupFile.exists();
+                }
+                if (protectRequiring) {
+                    // Protect the backup if the config is missing
+                    Date dateObj = new Date();
+                    //noinspection SpellCheckingInspection
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS.ZZZZ", Locale.CANADA_FRENCH);
+                    String dateTxt = dateFormat.format(dateObj);
+                    String archiveName = FILE_NAME + "." + dateTxt + BACKUP_POSTFIX;
+                    FileHelper.copyFile(backupFile, new File(configPath, archiveName));
+                }
+                if (backupRequiring) {
+                    if (protectRequiring) {
+                        liteLoader.registerExposable(INSTANCE, FILE_NAME);
+                        liteLoader.writeConfig(INSTANCE);
+                        registered = true;
+                    }
+                    FileHelper.copyFile(configFile, backupFile);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        if (!registered) {
+            liteLoader.registerExposable(INSTANCE, FILE_NAME);
         }
     }
 
