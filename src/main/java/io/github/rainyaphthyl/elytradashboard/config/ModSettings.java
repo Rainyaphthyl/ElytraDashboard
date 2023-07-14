@@ -1,4 +1,4 @@
-package io.github.rainyaphthyl.elytradashboard;
+package io.github.rainyaphthyl.elytradashboard.config;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -14,8 +14,8 @@ import java.util.Objects;
 public class ModSettings implements Exposable {
     public static final ModSettings INSTANCE = new ModSettings();
     public static final String FILE_NAME = "elytradashboard.json";
-    public static final String BACKUP_NAME = "elytradashboard.json.backup";
-    public static final String ARCHIVE_POSTFIX = "elytradashboard.json.archive";
+    public static final String BACKUP_POSTFIX = ".bak";
+    public static final String BACKUP_NAME = FILE_NAME + BACKUP_POSTFIX;
     private static final int FIELD_MASK = Modifier.PUBLIC | Modifier.PROTECTED | Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL | Modifier.TRANSIENT;
     /**
      * The setting field should be {@code public, non-static, non-final, non-transient}

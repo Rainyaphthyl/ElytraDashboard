@@ -1,7 +1,7 @@
 package io.github.rainyaphthyl.elytradashboard.mixin;
 
 import com.mumfrey.liteloader.Tickable;
-import io.github.rainyaphthyl.elytradashboard.ModSettings;
+import io.github.rainyaphthyl.elytradashboard.config.ModSettings;
 import io.github.rainyaphthyl.elytradashboard.input.KeyRotator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;

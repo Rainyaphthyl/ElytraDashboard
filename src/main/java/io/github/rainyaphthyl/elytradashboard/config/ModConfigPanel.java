@@ -1,9 +1,10 @@
-package io.github.rainyaphthyl.elytradashboard;
+package io.github.rainyaphthyl.elytradashboard.config;
 
 import com.mumfrey.liteloader.client.gui.GuiCheckbox;
 import com.mumfrey.liteloader.core.LiteLoader;
 import com.mumfrey.liteloader.modconfig.AbstractConfigPanel;
 import com.mumfrey.liteloader.modconfig.ConfigPanelHost;
+import io.github.rainyaphthyl.elytradashboard.LiteModElytraDashboard;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 
