@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.settings.GameSettings;
+import net.minecraft.profiler.Profiler;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -30,11 +31,14 @@ public abstract class MixinEntityRenderer implements Tickable {
      */
     @Inject(method = "updateRenderer()V", at = @At("HEAD"))
     private void updateRotationKey(CallbackInfo ci) {
+        Profiler profiler = mc.profiler;
+        profiler.startSection("elytraKeyInput");
         if (ModSettings.INSTANCE.keyboardElytra && mc.player.isElytraFlying()) {
             GameSettings gameSettings = mc.gameSettings;
             elytraDashboard$rotator.updateTickRotation(gameSettings);
             System.err.println("Delta(Rotation): " + elytraDashboard$rotator.getDeltaYaw() + " / " + elytraDashboard$rotator.getDeltaPitch());
         }
+        profiler.endSection();
     }
 
     /**
@@ -46,6 +50,8 @@ public abstract class MixinEntityRenderer implements Tickable {
             target = "Lnet/minecraft/client/entity/EntityPlayerSP;turn(FF)V", shift = At.Shift.BEFORE)
     )
     private void rotateByKeyboard(float partialTicks, long nanoTime, CallbackInfo ci) {
+        Profiler profiler = mc.profiler;
+        profiler.startSection("elytraKeyRotation");
         if (ModSettings.INSTANCE.keyboardElytra) {
             EntityPlayerSP player = mc.player;
             if (player.isElytraFlying()) {
@@ -59,5 +65,6 @@ public abstract class MixinEntityRenderer implements Tickable {
                 player.turn(partialDYaw, partialDPitch * (float) i);
             }
         }
+        profiler.endSection();
     }
 }
