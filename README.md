@@ -18,14 +18,23 @@ This is a client-side mod for Minecraft 1.12.2, powered by liteloader.
 
 ### Features and Functions
 
-Work in progress.
+_Work in progress_
 
 ## Development
 
-### Setup
+### Setup and Edit
 
-Clone the repository.
+- Clone the repository.
+- You MAY have to run `gradle setupDecompWorkspace`.
 
-### Release
+### Build and Release
 
-Run `gradle build`, and the release will be a file with postfix `.litemod` in the `build/libs/` directory.
+Before release, ensure the mod version is correct:
+
+- [gradle.properties](gradle.properties)
+- [LiteModElytraDashboard.java](src/main/java/io/github/rainyaphthyl/elytradashboard/LiteModElytraDashboard.java)
+
+Run your task by one of the following commands:
+
+- Run `gradle build`, and the release will be a file with postfix `.litemod` in the `build/libs/` directory.
+- Run `gradle runClient` to test the mod on the IDE.

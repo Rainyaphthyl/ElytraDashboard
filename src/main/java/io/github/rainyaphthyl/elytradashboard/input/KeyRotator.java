@@ -1,7 +1,5 @@
 package io.github.rainyaphthyl.elytradashboard.input;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
 import net.minecraft.client.settings.GameSettings;
 
 import javax.annotation.Nonnull;
@@ -14,9 +12,6 @@ public class KeyRotator {
     public static final float SCALE_FACTOR = 0.6F;
     public static final float SCALE_OFFSET = 0.2F;
     public static final float INERTIA = 0.6F;
-    @Expose
-    @SerializedName("enable_keyboard_elytra")
-    public static boolean keyboardElytraEnabled = false;
     private float deltaYaw = 0.0F;
     private float deltaPitch = 0.0F;
     private float prevDeltaYaw = 0.0F;
@@ -93,19 +88,14 @@ public class KeyRotator {
             float currFrame = partialTicks - prevPartialTick;
             partialDYaw = deltaYaw * currFrame;
             partialDPitch = deltaPitch * currFrame;
-            System.out.printf("Partial %.4f->%.4f: %+.6f/%+.6f\n", prevPartialTick, partialTicks,
-                    partialDYaw, partialDPitch);
         } else {
             float priorHalf = 1.0F - prevPartialTick;
             partialDYaw = prevDeltaYaw * priorHalf;
             partialDPitch = prevDeltaPitch * priorHalf;
-            System.out.printf("Tail %.4f->%.4f: %+.6f/%+.6f\n", prevPartialTick, 1.0F,
-                    partialDYaw, partialDPitch);
             float postDYaw = deltaYaw * partialTicks;
             float postDPitch = deltaPitch * partialTicks;
             partialDYaw += postDYaw;
             partialDPitch += postDPitch;
-            System.out.printf("Head %.4f->%.4f: %+.6f/%+.6f\n", 0.0F, partialTicks, postDYaw, postDPitch);
         }
         result[0] = partialDYaw;
         result[1] = partialDPitch;

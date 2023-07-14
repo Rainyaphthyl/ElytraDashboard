@@ -1,6 +1,7 @@
 package io.github.rainyaphthyl.elytradashboard.mixin;
 
 import com.mumfrey.liteloader.Tickable;
+import io.github.rainyaphthyl.elytradashboard.config.ModSettings;
 import io.github.rainyaphthyl.elytradashboard.input.KeyRotator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -32,7 +33,7 @@ public abstract class MixinEntityRenderer implements Tickable {
     private void updateRotationKey(CallbackInfo ci) {
         Profiler profiler = mc.profiler;
         profiler.startSection("elytraKeyInput");
-        if (KeyRotator.keyboardElytraEnabled && mc.player.isElytraFlying()) {
+        if (ModSettings.INSTANCE.keyboardElytra && mc.player.isElytraFlying()) {
             GameSettings gameSettings = mc.gameSettings;
             elytraDashboard$rotator.updateTickRotation(gameSettings);
             System.err.println("Delta(Rotation): " + elytraDashboard$rotator.getDeltaYaw() + " / " + elytraDashboard$rotator.getDeltaPitch());
@@ -51,7 +52,7 @@ public abstract class MixinEntityRenderer implements Tickable {
     private void rotateByKeyboard(float partialTicks, long nanoTime, CallbackInfo ci) {
         Profiler profiler = mc.profiler;
         profiler.startSection("elytraKeyRotation");
-        if (KeyRotator.keyboardElytraEnabled) {
+        if (ModSettings.INSTANCE.keyboardElytra) {
             EntityPlayerSP player = mc.player;
             if (player.isElytraFlying()) {
                 int i = 1;
