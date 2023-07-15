@@ -8,21 +8,25 @@ import java.util.Map;
 public final class RegFrameUpdaters {
     private static final Map<String, FrameUpdater> REGISTRY = new LinkedHashMap<>();
 
-    public static void registerAll() {
-        REGISTRY.put("aviationDashboard", new AviationDashboard());
+    public static void registerAll(Minecraft minecraft) {
+        REGISTRY.put("aviationDashboard", new AviationDashboard(minecraft));
     }
 
-    public static void updateAllOnFrame(Minecraft minecraft, float partialTicks) {
+    public static void updateAllOnFrame(float partialTicks, boolean inGame) {
         for (Map.Entry<String, FrameUpdater> entry : REGISTRY.entrySet()) {
             FrameUpdater frameUpdater = entry.getValue();
-            frameUpdater.render(minecraft, partialTicks);
+            frameUpdater.pushProfiler(entry.getKey());
+            frameUpdater.render(partialTicks, inGame);
+            frameUpdater.popProfiler();
         }
     }
 
-    public static void updateAllOnTick(Minecraft minecraft) {
+    public static void updateAllOnTick(boolean inGame) {
         for (Map.Entry<String, FrameUpdater> entry : REGISTRY.entrySet()) {
             FrameUpdater frameUpdater = entry.getValue();
-            frameUpdater.tick(minecraft);
+            frameUpdater.pushProfiler(entry.getKey());
+            frameUpdater.tick(inGame);
+            frameUpdater.popProfiler();
         }
     }
 }
