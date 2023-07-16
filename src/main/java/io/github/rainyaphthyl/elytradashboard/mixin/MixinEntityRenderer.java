@@ -1,6 +1,5 @@
 package io.github.rainyaphthyl.elytradashboard.mixin;
 
-import com.mumfrey.liteloader.Tickable;
 import io.github.rainyaphthyl.elytradashboard.config.ModSettings;
 import io.github.rainyaphthyl.elytradashboard.input.KeyRotator;
 import net.minecraft.client.Minecraft;
@@ -17,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(EntityRenderer.class)
-public abstract class MixinEntityRenderer implements Tickable {
+public abstract class MixinEntityRenderer {
     @Unique
     private final KeyRotator elytraDashboard$rotator = new KeyRotator();
     @Unique
