@@ -30,9 +30,15 @@ public class ModConfigPanel extends AbstractConfigPanel {
         GuiCheckbox checkbox = addControl(new GuiCheckbox(0, 0, 32, I18n.format("elytraDashboard.config.name.keyboardElytra")),
                 control -> {
                     control.checked = !control.checked;
-                    tempSettings.keyboardElytra = control.checked;
+                    tempSettings.keyboardElytraEnabled = control.checked;
                 });
-        checkbox.checked = tempSettings.keyboardElytra;
+        checkbox.checked = tempSettings.keyboardElytraEnabled;
+        checkbox = addControl(new GuiCheckbox(0, 0, 64, I18n.format("elytraDashboard.config.name.dashboard")),
+                control -> {
+                    control.checked = !control.checked;
+                    tempSettings.dashboardEnabled = control.checked;
+                });
+        checkbox.checked = tempSettings.dashboardEnabled;
     }
 
     /**

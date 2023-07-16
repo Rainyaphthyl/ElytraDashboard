@@ -34,14 +34,16 @@ public abstract class MixinEntityRenderer {
     private void onTickRenderer(CallbackInfo ci) {
         Profiler profiler = mc.profiler;
         profiler.startSection("elytraKeyInput");
-        if (ModSettings.INSTANCE.keyboardElytra && mc.player.isElytraFlying()) {
+        if (ModSettings.INSTANCE.keyboardElytraEnabled && mc.player.isElytraFlying()) {
             GameSettings gameSettings = mc.gameSettings;
             elytraDashboard$rotator.updateTickRotation(gameSettings);
         }
         profiler.endStartSection("tickDashboard");
-        Entity renderViewEntity = mc.getRenderViewEntity();
-        boolean inGame = renderViewEntity != null && renderViewEntity.world != null;
-        RegFrameUpdaters.updateAllOnTick(inGame);
+        if (ModSettings.INSTANCE.dashboardEnabled) {
+            Entity renderViewEntity = mc.getRenderViewEntity();
+            boolean inGame = renderViewEntity != null && renderViewEntity.world != null;
+            RegFrameUpdaters.updateAllOnTick(inGame);
+        }
         profiler.endSection();
     }
 
@@ -55,7 +57,7 @@ public abstract class MixinEntityRenderer {
     private void onPlayerTurn(float partialTicks, long nanoTime, CallbackInfo ci) {
         Profiler profiler = mc.profiler;
         profiler.startSection("elytraKeyRotation");
-        if (ModSettings.INSTANCE.keyboardElytra) {
+        if (ModSettings.INSTANCE.keyboardElytraEnabled) {
             EntityPlayerSP player = mc.player;
             if (player.isElytraFlying()) {
                 int i = 1;
@@ -75,9 +77,11 @@ public abstract class MixinEntityRenderer {
     private void onRenderGUI(float partialTicks, long nanoTime, CallbackInfo ci) {
         Profiler profiler = mc.profiler;
         profiler.startSection("renderDashboard");
-        Entity renderViewEntity = mc.getRenderViewEntity();
-        boolean inGame = renderViewEntity != null && renderViewEntity.world != null;
-        RegFrameUpdaters.updateAllOnFrame(partialTicks, inGame);
+        if (ModSettings.INSTANCE.dashboardEnabled) {
+            Entity renderViewEntity = mc.getRenderViewEntity();
+            boolean inGame = renderViewEntity != null && renderViewEntity.world != null;
+            RegFrameUpdaters.updateAllOnFrame(partialTicks, inGame);
+        }
         profiler.endSection();
     }
 }

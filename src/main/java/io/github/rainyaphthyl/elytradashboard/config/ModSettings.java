@@ -30,7 +30,11 @@ public class ModSettings implements Exposable {
     private static final int FIELD_PATTERN = Modifier.PUBLIC;
     @Expose
     @SerializedName("enable-keyboard-elytra")
-    public boolean keyboardElytra = false;
+    public boolean keyboardElytraEnabled = false;
+
+    @Expose
+    @SerializedName("enable-dashboard")
+    public boolean dashboardEnabled = true;
 
     public ModSettings() {
     }

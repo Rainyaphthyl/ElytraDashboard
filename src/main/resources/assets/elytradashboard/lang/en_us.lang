@@ -1,3 +1,4 @@
 elytraDashboard.config.title=Configuration of Elytra Dashboard
-elytraDashboard.config.name.keyboardElytra=keyboardElytra
+elytraDashboard.config.name.keyboardElytra=Enable Keyboard Elytra
+elytraDashboard.config.name.dashboard=Enable the Elytra Dashboard
 elytraDashboard.config.option.enabled=Enabled
