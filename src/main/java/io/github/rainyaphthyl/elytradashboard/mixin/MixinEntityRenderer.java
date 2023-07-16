@@ -1,11 +1,13 @@
 package io.github.rainyaphthyl.elytradashboard.mixin;
 
 import io.github.rainyaphthyl.elytradashboard.config.ModSettings;
+import io.github.rainyaphthyl.elytradashboard.display.RegFrameUpdaters;
 import io.github.rainyaphthyl.elytradashboard.input.KeyRotator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.settings.GameSettings;
+import net.minecraft.entity.Entity;
 import net.minecraft.profiler.Profiler;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,14 +31,17 @@ public abstract class MixinEntityRenderer {
      * Render every tick
      */
     @Inject(method = "updateRenderer()V", at = @At("HEAD"))
-    private void updateRotationKey(CallbackInfo ci) {
+    private void onTickRenderer(CallbackInfo ci) {
         Profiler profiler = mc.profiler;
         profiler.startSection("elytraKeyInput");
         if (ModSettings.INSTANCE.keyboardElytra && mc.player.isElytraFlying()) {
             GameSettings gameSettings = mc.gameSettings;
             elytraDashboard$rotator.updateTickRotation(gameSettings);
-            System.err.println("Delta(Rotation): " + elytraDashboard$rotator.getDeltaYaw() + " / " + elytraDashboard$rotator.getDeltaPitch());
         }
+        profiler.endStartSection("tickDashboard");
+        Entity renderViewEntity = mc.getRenderViewEntity();
+        boolean inGame = renderViewEntity != null && renderViewEntity.world != null;
+        RegFrameUpdaters.updateAllOnTick(inGame);
         profiler.endSection();
     }
 
@@ -45,10 +50,9 @@ public abstract class MixinEntityRenderer {
      *
      * @param partialTicks Seems in {@code [0.0F, 1.0F)} ?
      */
-    @Inject(method = "updateCameraAndRender(FJ)V", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/entity/EntityPlayerSP;turn(FF)V", shift = At.Shift.BEFORE)
+    @Inject(method = "updateCameraAndRender(FJ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;turn(FF)V", shift = At.Shift.BEFORE)
     )
-    private void rotateByKeyboard(float partialTicks, long nanoTime, CallbackInfo ci) {
+    private void onPlayerTurn(float partialTicks, long nanoTime, CallbackInfo ci) {
         Profiler profiler = mc.profiler;
         profiler.startSection("elytraKeyRotation");
         if (ModSettings.INSTANCE.keyboardElytra) {
@@ -64,6 +68,16 @@ public abstract class MixinEntityRenderer {
                 player.turn(partialDYaw, partialDPitch * (float) i);
             }
         }
+        profiler.endSection();
+    }
+
+    @Inject(method = "updateCameraAndRender(FJ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiIngame;renderGameOverlay(F)V", shift = At.Shift.AFTER))
+    private void onRenderGUI(float partialTicks, long nanoTime, CallbackInfo ci) {
+        Profiler profiler = mc.profiler;
+        profiler.startSection("renderDashboard");
+        Entity renderViewEntity = mc.getRenderViewEntity();
+        boolean inGame = renderViewEntity != null && renderViewEntity.world != null;
+        RegFrameUpdaters.updateAllOnFrame(partialTicks, inGame);
         profiler.endSection();
     }
 }

@@ -28,11 +28,17 @@ public class ElytraReporter implements FrameUpdater {
         if (inGame && tickValid) {
             EntityPlayerSP player = minecraft.player;
             if (player != null && player.isElytraFlying()) {
+                float reducedFallingDamage = packet.getReducedFallingDamage();
+                float reducedCollisionDamage = packet.getReducedCollisionDamage();
                 String text = String.format("Collision: %.1f / %.1f ; Falling: %.1f / %.1f",
-                        packet.getCompleteCollisionDamage(), packet.getReducedCollisionDamage(),
-                        packet.getCompleteFallingDamage(), packet.getReducedFallingDamage());
+                        packet.getCompleteCollisionDamage(), reducedCollisionDamage,
+                        packet.getCompleteFallingDamage(), reducedFallingDamage);
                 FontRenderer fontRenderer = minecraft.fontRenderer;
-                Color color = minecraft.isGamePaused() ? Color.WHITE.darker() : Color.WHITE;
+                int colorRGB = Color.WHITE.getRGB();
+                float health = player.getHealth();
+                if (reducedFallingDamage >= health || reducedCollisionDamage >= health) {
+                    colorRGB = Color.RED.getRGB();
+                }
                 ScaledResolution resolution = new ScaledResolution(minecraft);
                 int txtWidth = fontRenderer.getStringWidth(text);
                 int displayWidth = resolution.getScaledWidth();
@@ -41,12 +47,12 @@ public class ElytraReporter implements FrameUpdater {
                 int displayHeight = resolution.getScaledHeight();
                 if (txtWidth > maxWidth) {
                     int height = fontRenderer.getWordWrappedHeight(text, maxWidth);
-                    int posY = (displayHeight - height);
+                    int posY = (displayHeight - height) / 4;
                     posX = (displayWidth - maxWidth) / 2;
-                    fontRenderer.drawSplitString(text, posX, posY, maxWidth, color.getRGB());
+                    fontRenderer.drawSplitString(text, posX, posY, maxWidth, colorRGB);
                 } else {
                     int posY = (displayHeight - fontRenderer.FONT_HEIGHT) / 4;
-                    fontRenderer.drawString(text, posX, posY, color.getRGB());
+                    fontRenderer.drawString(text, posX, posY, colorRGB);
                 }
             }
         }

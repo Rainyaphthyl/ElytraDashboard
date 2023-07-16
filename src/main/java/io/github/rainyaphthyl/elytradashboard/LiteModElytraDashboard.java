@@ -2,7 +2,6 @@ package io.github.rainyaphthyl.elytradashboard;
 
 import com.mumfrey.liteloader.Configurable;
 import com.mumfrey.liteloader.InitCompleteListener;
-import com.mumfrey.liteloader.Tickable;
 import com.mumfrey.liteloader.core.LiteLoader;
 import com.mumfrey.liteloader.modconfig.ConfigPanel;
 import io.github.rainyaphthyl.elytradashboard.config.ModConfigPanel;
@@ -15,7 +14,7 @@ import net.minecraft.profiler.Profiler;
 import javax.annotation.Nonnull;
 import java.io.File;
 
-public class LiteModElytraDashboard implements Tickable, Configurable, InitCompleteListener {
+public class LiteModElytraDashboard implements Configurable, InitCompleteListener {
     public static final String NAME = "Elytra Dashboard";
     public static final String VERSION = "0.1.1-alpha.2";
     private static ModVersion versionObj = null;
@@ -97,7 +96,6 @@ public class LiteModElytraDashboard implements Tickable, Configurable, InitCompl
      * @param clock        True if this is a new tick, otherwise false if it's a
      *                     regular frame
      */
-    @Override
     public void onTick(@Nonnull Minecraft minecraft, float partialTicks, boolean inGame, boolean clock) {
         Profiler profiler = minecraft.profiler;
         profiler.startSection("elytraDashboard");
