@@ -96,6 +96,7 @@ public class LiteModElytraDashboard implements Configurable, InitCompleteListene
      * @param clock        True if this is a new tick, otherwise false if it's a
      *                     regular frame
      */
+    @Deprecated
     public void onTick(@Nonnull Minecraft minecraft, float partialTicks, boolean inGame, boolean clock) {
         Profiler profiler = minecraft.profiler;
         profiler.startSection("elytraDashboard");

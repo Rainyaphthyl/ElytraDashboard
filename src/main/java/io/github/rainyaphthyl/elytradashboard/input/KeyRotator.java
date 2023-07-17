@@ -102,12 +102,4 @@ public class KeyRotator {
         prevPartialTick = partialTicks;
         return result;
     }
-
-    public float getDeltaYaw() {
-        return deltaYaw;
-    }
-
-    public float getDeltaPitch() {
-        return deltaPitch;
-    }
 }
