@@ -10,6 +10,7 @@ import net.minecraft.client.resources.I18n;
 
 @SuppressWarnings("unused")
 public class ModConfigPanel extends AbstractConfigPanel {
+    private static final int CHECKBOX_HEIGHT = 12;
     private final ModSettings tempSettings = new ModSettings(ModSettings.INSTANCE);
     private ModSettings mainSettings = null;
 
@@ -27,12 +28,21 @@ public class ModConfigPanel extends AbstractConfigPanel {
         LiteModElytraDashboard mod = host.getMod();
         mainSettings = mod.getSettings();
         tempSettings.syncFrom(mainSettings);
-        GuiCheckbox checkbox = addControl(new GuiCheckbox(0, 0, 32, I18n.format("elytraDashboard.config.name.keyboardElytra")),
+        int posY = 0;
+        int id = 0;
+        GuiCheckbox checkbox = addControl(new GuiCheckbox(id, 0, posY, I18n.format("elytraDashboard.config.name.keyboardElytra")),
                 control -> {
                     control.checked = !control.checked;
-                    tempSettings.keyboardElytra = control.checked;
+                    tempSettings.keyboardElytraEnabled = control.checked;
                 });
-        checkbox.checked = tempSettings.keyboardElytra;
+        checkbox.checked = tempSettings.keyboardElytraEnabled;
+        posY += CHECKBOX_HEIGHT;
+        checkbox = addControl(new GuiCheckbox(++id, 0, posY, I18n.format("elytraDashboard.config.name.dashboard")),
+                control -> {
+                    control.checked = !control.checked;
+                    tempSettings.dashboardEnabled = control.checked;
+                });
+        checkbox.checked = tempSettings.dashboardEnabled;
     }
 
     /**
@@ -54,6 +64,7 @@ public class ModConfigPanel extends AbstractConfigPanel {
             if (updated) {
                 LiteLoader.getInstance().writeConfig(mainSettings);
             }
+            mainSettings = null;
         }
     }
 }
