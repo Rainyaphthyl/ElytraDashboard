@@ -16,7 +16,7 @@ import java.io.File;
 
 public class LiteModElytraDashboard implements Configurable, InitCompleteListener {
     public static final String NAME = "Elytra Dashboard";
-    public static final String VERSION = "0.1.1-alpha.2";
+    public static final String VERSION = "0.2.0";
     private static ModVersion versionObj = null;
 
     @SuppressWarnings("unused")
