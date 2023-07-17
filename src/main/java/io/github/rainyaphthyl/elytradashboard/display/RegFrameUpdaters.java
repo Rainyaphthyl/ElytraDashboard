@@ -9,7 +9,7 @@ public final class RegFrameUpdaters {
     private static final Map<String, FrameUpdater> REGISTRY = new LinkedHashMap<>();
 
     public static void registerAll(Minecraft minecraft) {
-        REGISTRY.put(ElytraReporter.class.getSimpleName(), new ElytraReporter(minecraft));
+        REGISTRY.put("the_dashboard", new ElytraReporter(minecraft));
     }
 
     public static void updateAllOnFrame(float partialTicks, boolean inGame) {
