@@ -4,7 +4,7 @@ import net.minecraft.client.settings.GameSettings;
 
 import javax.annotation.Nonnull;
 
-public class KeyRotator {
+public class KeyboardRotator {
     /**
      * This may not be {@code 8.0F} for keyboard operation
      */
@@ -22,8 +22,8 @@ public class KeyRotator {
 
     {
         prevSensitivity = 0.0F;
-        float scale = prevSensitivity * KeyRotator.SCALE_FACTOR + KeyRotator.SCALE_OFFSET;
-        prevMouseRate = scale * scale * scale * KeyRotator.RATE_ALTERED;
+        float scale = prevSensitivity * KeyboardRotator.SCALE_FACTOR + KeyboardRotator.SCALE_OFFSET;
+        prevMouseRate = scale * scale * scale * KeyboardRotator.RATE_ALTERED;
     }
 
     public void updateTickRotation(@Nonnull GameSettings gameSettings) {
@@ -34,8 +34,8 @@ public class KeyRotator {
         if (prevSensitivity == sensitivity) {
             rate = prevMouseRate;
         } else {
-            float scale = sensitivity * KeyRotator.SCALE_FACTOR + KeyRotator.SCALE_OFFSET;
-            rate = scale * scale * scale * KeyRotator.RATE_ALTERED;
+            float scale = sensitivity * KeyboardRotator.SCALE_FACTOR + KeyboardRotator.SCALE_OFFSET;
+            rate = scale * scale * scale * KeyboardRotator.RATE_ALTERED;
             prevMouseRate = rate;
             prevSensitivity = sensitivity;
         }
@@ -58,13 +58,13 @@ public class KeyRotator {
             deltaPitch += (float) keyForward * rate;
         }
         if (deltaYaw != 0.0F) {
-            deltaYaw *= KeyRotator.INERTIA;
+            deltaYaw *= KeyboardRotator.INERTIA;
             if (Math.abs(deltaYaw) < 0.003F) {
                 deltaYaw = 0.0F;
             }
         }
         if (deltaPitch != 0.0F) {
-            deltaPitch *= KeyRotator.INERTIA;
+            deltaPitch *= KeyboardRotator.INERTIA;
             if (Math.abs(deltaPitch) < 0.003F) {
                 deltaPitch = 0.0F;
             }

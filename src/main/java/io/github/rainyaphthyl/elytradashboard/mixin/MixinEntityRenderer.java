@@ -1,8 +1,8 @@
 package io.github.rainyaphthyl.elytradashboard.mixin;
 
 import io.github.rainyaphthyl.elytradashboard.config.ModSettings;
-import io.github.rainyaphthyl.elytradashboard.display.RegFrameUpdaters;
-import io.github.rainyaphthyl.elytradashboard.input.KeyRotator;
+import io.github.rainyaphthyl.elytradashboard.display.FlightInstrument;
+import io.github.rainyaphthyl.elytradashboard.input.KeyboardRotator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.EntityRenderer;
@@ -20,7 +20,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(EntityRenderer.class)
 public abstract class MixinEntityRenderer {
     @Unique
-    private final KeyRotator elytraDashboard$rotator = new KeyRotator();
+    private final FlightInstrument elytraDashboard$instrument = new FlightInstrument();
+    @Unique
+    private final KeyboardRotator elytraDashboard$rotator = new KeyboardRotator();
     @Unique
     private final float[] elytraDashboard$bufferDeltas = new float[2];
     @Shadow
@@ -38,11 +40,11 @@ public abstract class MixinEntityRenderer {
             GameSettings gameSettings = mc.gameSettings;
             elytraDashboard$rotator.updateTickRotation(gameSettings);
         }
-        profiler.endStartSection("tickDashboard");
+        profiler.endStartSection("tickInstrument");
         if (ModSettings.INSTANCE.dashboardEnabled) {
             Entity renderViewEntity = mc.getRenderViewEntity();
             boolean inGame = renderViewEntity != null && renderViewEntity.world != null;
-            RegFrameUpdaters.updateAllOnTick(inGame);
+            elytraDashboard$instrument.tick(mc, inGame);
         }
         profiler.endSection();
     }
@@ -76,11 +78,11 @@ public abstract class MixinEntityRenderer {
     @Inject(method = "updateCameraAndRender(FJ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiIngame;renderGameOverlay(F)V", shift = At.Shift.AFTER))
     private void onRenderGUI(float partialTicks, long nanoTime, CallbackInfo ci) {
         Profiler profiler = mc.profiler;
-        profiler.startSection("renderDashboard");
+        profiler.startSection("renderInstrument");
         if (ModSettings.INSTANCE.dashboardEnabled) {
             Entity renderViewEntity = mc.getRenderViewEntity();
             boolean inGame = renderViewEntity != null && renderViewEntity.world != null;
-            RegFrameUpdaters.updateAllOnFrame(partialTicks, inGame);
+            elytraDashboard$instrument.render(mc, inGame);
         }
         profiler.endSection();
     }

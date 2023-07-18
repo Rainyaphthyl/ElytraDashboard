@@ -6,12 +6,9 @@ import com.mumfrey.liteloader.core.LiteLoader;
 import com.mumfrey.liteloader.modconfig.ConfigPanel;
 import io.github.rainyaphthyl.elytradashboard.config.ModConfigPanel;
 import io.github.rainyaphthyl.elytradashboard.config.ModSettings;
-import io.github.rainyaphthyl.elytradashboard.display.RegFrameUpdaters;
 import io.github.rainyaphthyl.elytradashboard.util.version.ModVersion;
 import net.minecraft.client.Minecraft;
-import net.minecraft.profiler.Profiler;
 
-import javax.annotation.Nonnull;
 import java.io.File;
 
 public class LiteModElytraDashboard implements Configurable, InitCompleteListener {
@@ -88,31 +85,6 @@ public class LiteModElytraDashboard implements Configurable, InitCompleteListene
     }
 
     /**
-     * Called every frame
-     *
-     * @param minecraft    Minecraft instance
-     * @param partialTicks Partial tick value
-     * @param inGame       True if in-game, false if in the menu
-     * @param clock        True if this is a new tick, otherwise false if it's a
-     *                     regular frame
-     */
-    @Deprecated
-    public void onTick(@Nonnull Minecraft minecraft, float partialTicks, boolean inGame, boolean clock) {
-        Profiler profiler = minecraft.profiler;
-        profiler.startSection("elytraDashboard");
-        if (minecraft.world != null) {
-            profiler.startSection("tick");
-            if (clock) {
-                RegFrameUpdaters.updateAllOnTick(inGame);
-            }
-            profiler.endStartSection("render");
-            RegFrameUpdaters.updateAllOnFrame(partialTicks, inGame);
-            profiler.endSection();
-        }
-        profiler.endSection();
-    }
-
-    /**
      * Called as soon as the game is initialised and the main game loop is
      * running.
      *
@@ -121,6 +93,5 @@ public class LiteModElytraDashboard implements Configurable, InitCompleteListene
      */
     @Override
     public void onInitCompleted(Minecraft minecraft, LiteLoader loader) {
-        RegFrameUpdaters.registerAll(minecraft);
     }
 }

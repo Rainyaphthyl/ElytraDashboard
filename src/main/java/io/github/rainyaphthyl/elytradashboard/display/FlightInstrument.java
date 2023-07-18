@@ -4,27 +4,20 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.profiler.Profiler;
 import net.minecraft.util.math.MathHelper;
 
 import javax.annotation.Nonnull;
 import java.awt.*;
-import java.util.Objects;
 
-public class ElytraReporter implements FrameUpdater {
+public class FlightInstrument {
     public static final double MAX_WIDTH_RATE = 0.75;
-    private final Minecraft minecraft;
-    private final Profiler profiler;
     private final ElytraPacket packet = new ElytraPacket();
     private boolean tickValid = false;
 
-    public ElytraReporter(Minecraft minecraft) {
-        this.minecraft = Objects.requireNonNull(minecraft);
-        profiler = Objects.requireNonNull(minecraft.profiler);
+    public FlightInstrument() {
     }
 
-    @Override
-    public void render(float partialTicks, boolean inGame) {
+    public void render(@Nonnull Minecraft minecraft, boolean inGame) {
         if (inGame && tickValid) {
             EntityPlayerSP player = minecraft.player;
             if (player != null && player.isElytraFlying()) {
@@ -58,8 +51,13 @@ public class ElytraReporter implements FrameUpdater {
         }
     }
 
-    @Override
-    public void tick(boolean inGame) {
+    /**
+     * Queries the variables of movement.
+     *
+     * @param minecraft The minecraft client instance
+     * @param inGame    {@code true} if in a world or a server, {@code false} if in the main menu
+     */
+    public void tick(@Nonnull Minecraft minecraft, boolean inGame) {
         if (inGame) {
             EntityPlayerSP player = minecraft.player;
             if (player != null && player.isElytraFlying()) {
@@ -78,11 +76,5 @@ public class ElytraReporter implements FrameUpdater {
         } else {
             tickValid = false;
         }
-    }
-
-    @Nonnull
-    @Override
-    public Profiler getProfiler() {
-        return profiler;
     }
 }
