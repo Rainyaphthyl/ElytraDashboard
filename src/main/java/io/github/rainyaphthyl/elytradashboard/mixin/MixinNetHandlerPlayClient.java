@@ -27,8 +27,9 @@ public abstract class MixinNetHandlerPlayClient {
     private void getEntityMetadata(SPacketEntityMetadata packetIn, CallbackInfo ci) {
         int id = Objects.requireNonNull(packetIn).getEntityId();
         Entity entity = world.getEntityByID(id);
-        if (entity instanceof MixinEntityFireworkRocket) {
-            EntityLivingBase payload = ((MixinEntityFireworkRocket) entity).getBoostedEntity();
+        if (entity instanceof AccessEntityFireworkRocket) {
+            AccessEntityFireworkRocket firework = (AccessEntityFireworkRocket) entity;
+            EntityLivingBase payload = firework.getBoostedEntity();
             if (payload != null) {
                 NetHandlerPlayClient connection = client.getConnection();
                 if (connection != null) {
@@ -41,8 +42,9 @@ public abstract class MixinNetHandlerPlayClient {
     @Inject(method = "handleEntityMovement", at = @At(value = "HEAD"))
     private void recordEntityMovement(SPacketEntity packetIn, CallbackInfo ci) {
         Entity entity = Objects.requireNonNull(packetIn).getEntity(world);
-        if (entity instanceof MixinEntityFireworkRocket) {
-            EntityLivingBase payload = ((MixinEntityFireworkRocket) entity).getBoostedEntity();
+        if (entity instanceof AccessEntityFireworkRocket) {
+            AccessEntityFireworkRocket firework = (AccessEntityFireworkRocket) entity;
+            EntityLivingBase payload = firework.getBoostedEntity();
             if (payload != null) {
                 NetHandlerPlayClient connection = client.getConnection();
                 if (connection != null) {
@@ -56,8 +58,9 @@ public abstract class MixinNetHandlerPlayClient {
     private void recordEntityVelocity(SPacketEntityVelocity packetIn, CallbackInfo ci) {
         int id = Objects.requireNonNull(packetIn).getEntityID();
         Entity entity = world.getEntityByID(id);
-        if (entity instanceof MixinEntityFireworkRocket) {
-            EntityLivingBase payload = ((MixinEntityFireworkRocket) entity).getBoostedEntity();
+        if (entity instanceof AccessEntityFireworkRocket) {
+            AccessEntityFireworkRocket firework = (AccessEntityFireworkRocket) entity;
+            EntityLivingBase payload = firework.getBoostedEntity();
             if (payload != null) {
                 NetHandlerPlayClient connection = client.getConnection();
                 if (connection != null) {
@@ -71,8 +74,9 @@ public abstract class MixinNetHandlerPlayClient {
     private void recordSpawningEntity(SPacketSpawnObject packetIn, CallbackInfo ci) {
         int id = Objects.requireNonNull(packetIn).getEntityID();
         Entity entity = world.getEntityByID(id);
-        if (entity instanceof MixinEntityFireworkRocket) {
-            EntityLivingBase payload = ((MixinEntityFireworkRocket) entity).getBoostedEntity();
+        if (entity instanceof AccessEntityFireworkRocket) {
+            AccessEntityFireworkRocket firework = (AccessEntityFireworkRocket) entity;
+            EntityLivingBase payload = firework.getBoostedEntity();
             if (payload != null) {
                 NetHandlerPlayClient connection = client.getConnection();
                 if (connection != null) {
