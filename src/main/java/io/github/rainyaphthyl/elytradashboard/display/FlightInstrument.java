@@ -3,6 +3,7 @@ package io.github.rainyaphthyl.elytradashboard.display;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiGameOver;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -61,7 +62,7 @@ public class FlightInstrument {
      * @param inGame    {@code true} if in a world or a server, {@code false} if in the main menu
      */
     public void tick(@Nonnull Minecraft minecraft, boolean inGame) {
-        if (inGame) {
+        if (inGame && !(minecraft.currentScreen instanceof GuiGameOver)) {
             EntityPlayerSP playerSP = minecraft.player;
             if (playerSP != null && playerSP.isElytraFlying()) {
                 EntityPlayer player = requestServerSinglePlayer(minecraft);
