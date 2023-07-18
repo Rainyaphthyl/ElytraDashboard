@@ -4,7 +4,9 @@
   "package": "io.github.rainyaphthyl.elytradashboard.mixin",
   "refmap": "mixins.elytradashboard.refmap.json",
   "mixins": [
-    "MixinEntityRenderer"
+    "MixinEntityFireworkRocket",
+    "MixinEntityRenderer",
+    "MixinNetHandlerPlayClient"
   ],
   "injectors": {
     "defaultRequire": 1

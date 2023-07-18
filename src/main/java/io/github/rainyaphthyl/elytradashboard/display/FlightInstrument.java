@@ -27,9 +27,6 @@ public class FlightInstrument {
     private float health = 0.0F;
     private boolean tickValid = false;
 
-    public FlightInstrument() {
-    }
-
     public EntityPlayer requestServerSinglePlayer(@Nonnull Minecraft minecraft) {
         EntityPlayerSP playerSP = minecraft.player;
         if (USING_SERVER_DATA && minecraft.isSingleplayer()) {
