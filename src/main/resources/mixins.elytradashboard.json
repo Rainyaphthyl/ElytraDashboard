@@ -5,7 +5,6 @@
   "refmap": "mixins.elytradashboard.refmap.json",
   "mixins": [
     "AccessEntityFireworkRocket",
-    "MixinEntityFireworkRocket",
     "MixinEntityRenderer",
     "MixinNetHandlerPlayClient"
   ],
