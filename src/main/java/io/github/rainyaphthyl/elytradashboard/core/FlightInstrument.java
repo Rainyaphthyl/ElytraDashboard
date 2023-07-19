@@ -1,15 +1,25 @@
 package io.github.rainyaphthyl.elytradashboard.core;
 
+import io.github.rainyaphthyl.elytradashboard.mixin.AccessEntityFireworkRocket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiGameOver;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityFireworkRocket;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.play.server.SPacketChat;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerList;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.ChatType;
+import net.minecraft.util.text.Style;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 
 import javax.annotation.Nonnull;
 import java.awt.*;
@@ -86,7 +96,30 @@ public class FlightInstrument {
         }
     }
 
-    public void markFireworkUsage(int lifetime, int entityId) {
+    public void markFireworkUsage(int lifetime, UUID uuid) {
+        // Do not count the same firework for multiple times
+    }
+
+    public void checkMarkFirework(Minecraft client, Entity entity) {
+        if (entity instanceof EntityFireworkRocket && client != null) {
+            EntityFireworkRocket firework = (EntityFireworkRocket) entity;
+            if (firework instanceof AccessEntityFireworkRocket) {
+                EntityLivingBase payload = ((AccessEntityFireworkRocket) firework).getBoostedEntity();
+                if (payload instanceof EntityPlayer) {
+                    UUID uuidHost = client.player.getUniqueID();
+                    UUID uuidBoosted = payload.getUniqueID();
+                    if (uuidBoosted.equals(uuidHost)) {
+                        int lifetime = ((AccessEntityFireworkRocket) firework).getLifetime();
+                        UUID uuidRocket = firework.getUniqueID();
+                        markFireworkUsage(lifetime, uuidRocket);
+                        NetHandlerPlayClient connection = client.getConnection();
+                        if (connection != null) {
+                            connection.handleChat(new SPacketChat(new TextComponentString(entity.getName() + ": " + payload.getName()).setStyle(new Style().setColor(TextFormatting.GREEN)), ChatType.CHAT));
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public void render(@Nonnull Minecraft minecraft, boolean inGame) {
