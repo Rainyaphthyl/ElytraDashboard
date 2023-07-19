@@ -1,8 +1,7 @@
 package io.github.rainyaphthyl.elytradashboard.mixin;
 
 import io.github.rainyaphthyl.elytradashboard.config.ModSettings;
-import io.github.rainyaphthyl.elytradashboard.display.FlightInstrument;
-import io.github.rainyaphthyl.elytradashboard.input.KeyboardRotator;
+import io.github.rainyaphthyl.elytradashboard.core.References;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.EntityRenderer;
@@ -20,10 +19,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(EntityRenderer.class)
 public abstract class MixinEntityRenderer {
     @Unique
-    private final FlightInstrument elytraDashboard$instrument = new FlightInstrument();
-    @Unique
-    private final KeyboardRotator elytraDashboard$rotator = new KeyboardRotator();
-    @Unique
     private final float[] elytraDashboard$bufferDeltas = new float[2];
     @Shadow
     @Final
@@ -38,13 +33,13 @@ public abstract class MixinEntityRenderer {
         profiler.startSection("elytraKeyInput");
         if (ModSettings.INSTANCE.keyboardElytraEnabled && mc.player.isElytraFlying()) {
             GameSettings gameSettings = mc.gameSettings;
-            elytraDashboard$rotator.updateTickRotation(gameSettings);
+            References.keyboardRotator.updateTickRotation(gameSettings);
         }
         profiler.endStartSection("tickInstrument");
         if (ModSettings.INSTANCE.dashboardEnabled) {
             Entity renderViewEntity = mc.getRenderViewEntity();
             boolean inGame = renderViewEntity != null && renderViewEntity.world != null;
-            elytraDashboard$instrument.tick(mc, inGame);
+            References.flightInstrument.tick(mc, inGame);
         }
         profiler.endSection();
     }
@@ -66,7 +61,7 @@ public abstract class MixinEntityRenderer {
                 if (mc.gameSettings.invertMouse) {
                     i = -1;
                 }
-                float[] partialDeltas = elytraDashboard$rotator.updateFrameRotation(elytraDashboard$bufferDeltas, partialTicks);
+                float[] partialDeltas = References.keyboardRotator.updateFrameRotation(elytraDashboard$bufferDeltas, partialTicks);
                 float partialDYaw = partialDeltas[0];
                 float partialDPitch = partialDeltas[1];
                 player.turn(partialDYaw, partialDPitch * (float) i);
@@ -82,7 +77,7 @@ public abstract class MixinEntityRenderer {
         if (ModSettings.INSTANCE.dashboardEnabled) {
             Entity renderViewEntity = mc.getRenderViewEntity();
             boolean inGame = renderViewEntity != null && renderViewEntity.world != null;
-            elytraDashboard$instrument.render(mc, inGame);
+            References.flightInstrument.render(mc, inGame);
         }
         profiler.endSection();
     }

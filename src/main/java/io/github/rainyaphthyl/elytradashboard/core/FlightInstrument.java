@@ -1,4 +1,4 @@
-package io.github.rainyaphthyl.elytradashboard.display;
+package io.github.rainyaphthyl.elytradashboard.core;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -25,7 +25,7 @@ public class FlightInstrument {
     private final ElytraPacket packet = new ElytraPacket();
     private final AtomicReferenceArray<EntityPlayer> playerCache = new AtomicReferenceArray<>(2);
     private float health = 0.0F;
-    private boolean tickValid = false;
+    private boolean duringFlight = false;
 
     public EntityPlayer requestServerSinglePlayer(@Nonnull Minecraft minecraft) {
         EntityPlayerSP playerSP = minecraft.player;
@@ -76,18 +76,21 @@ public class FlightInstrument {
                     }
                     packet.applyReducedDamages(player.getArmorInventoryList());
                     health = player.getHealth();
-                    tickValid = true;
+                    duringFlight = true;
                     return;
                 }
             }
         }
-        if (tickValid) {
-            tickValid = false;
+        if (duringFlight) {
+            duringFlight = false;
         }
     }
 
+    public void markFireworkUsage(int lifetime, int entityId) {
+    }
+
     public void render(@Nonnull Minecraft minecraft, boolean inGame) {
-        if (inGame && tickValid) {
+        if (inGame && duringFlight) {
             float reducedFallingDamage = packet.getReducedFallingDamage();
             float reducedCollisionDamage = packet.getReducedCollisionDamage();
             String text = String.format("Collision: %.1f / %.1f ; Falling: %.1f / %.1f",

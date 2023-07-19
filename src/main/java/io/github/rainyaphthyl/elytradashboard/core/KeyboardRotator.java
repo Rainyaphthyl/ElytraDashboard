@@ -1,4 +1,4 @@
-package io.github.rainyaphthyl.elytradashboard.input;
+package io.github.rainyaphthyl.elytradashboard.core;
 
 import net.minecraft.client.settings.GameSettings;
 
