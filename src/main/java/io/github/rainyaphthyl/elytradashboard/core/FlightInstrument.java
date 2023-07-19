@@ -112,10 +112,12 @@ public class FlightInstrument {
                         int lifetime = ((AccessEntityFireworkRocket) firework).getLifetime();
                         UUID uuidRocket = firework.getUniqueID();
                         markFireworkUsage(lifetime, uuidRocket);
+                        //region debug
                         NetHandlerPlayClient connection = client.getConnection();
                         if (connection != null) {
                             connection.handleChat(new SPacketChat(new TextComponentString(entity.getName() + ": " + payload.getName()).setStyle(new Style().setColor(TextFormatting.GREEN)), ChatType.CHAT));
                         }
+                        //endregion
                     }
                 }
             }
