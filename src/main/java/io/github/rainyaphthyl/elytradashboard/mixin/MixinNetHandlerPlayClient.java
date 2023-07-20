@@ -25,13 +25,17 @@ public abstract class MixinNetHandlerPlayClient {
     @Inject(method = "handleEntityMovement", at = @At(value = "HEAD"))
     private void recordEntityMovement(SPacketEntity packetIn, CallbackInfo ci) {
         Entity entity = Objects.requireNonNull(packetIn).getEntity(world);
-        References.flightInstrument.checkMarkFirework(client.player, entity);
+        if (entity instanceof AccessEntityFireworkRocket) {
+            References.flightInstrument.checkMarkFirework(client.player, (AccessEntityFireworkRocket) entity);
+        }
     }
 
     @Inject(method = "handleEntityVelocity", at = @At(value = "HEAD"))
     private void recordEntityVelocity(SPacketEntityVelocity packetIn, CallbackInfo ci) {
         int id = Objects.requireNonNull(packetIn).getEntityID();
         Entity entity = world.getEntityByID(id);
-        References.flightInstrument.checkMarkFirework(client.player, entity);
+        if (entity instanceof AccessEntityFireworkRocket) {
+            References.flightInstrument.checkMarkFirework(client.player, (AccessEntityFireworkRocket) entity);
+        }
     }
 }

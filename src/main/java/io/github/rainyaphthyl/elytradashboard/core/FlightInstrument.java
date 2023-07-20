@@ -1,27 +1,28 @@
 package io.github.rainyaphthyl.elytradashboard.core;
 
 import io.github.rainyaphthyl.elytradashboard.mixin.AccessEntityFireworkRocket;
+import io.github.rainyaphthyl.elytradashboard.util.InfoLineRecord;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiGameOver;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.item.EntityFireworkRocket;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.network.play.server.SPacketChat;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerList;
+import net.minecraft.util.Tuple;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.TextComponentString;
 
 import javax.annotation.Nonnull;
 import java.awt.*;
+import java.util.List;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public class FlightInstrument {
@@ -38,7 +39,6 @@ public class FlightInstrument {
      * Seems that it should use the client data...
      */
     public static final boolean USING_SERVER_DATA = false;
-    private static final AtomicReference<Thread> threadCache = new AtomicReference<>();
     private final ElytraPacket packet = new ElytraPacket();
     private final AtomicReferenceArray<EntityPlayer> playerCache = new AtomicReferenceArray<>(2);
     /**
@@ -52,27 +52,12 @@ public class FlightInstrument {
      * <p>
      * value: {@link Integer} - the number of rockets with that lifetime
      */
-    private final Map<Integer, Integer> fireworkLifetimeRecord = new HashMap<>();
+    private final ConcurrentMap<Integer, Integer> fireworkLifetimeRecord = new ConcurrentHashMap<>();
+    private final AtomicLong fireworkTotalTime = new AtomicLong(0L);
     private long initTripTick = 0L;
     private long currTripTick = 0L;
     private float health = 0.0F;
     private boolean duringFlight = false;
-
-    private static void printCurrentThread(String task) {
-        synchronized (threadCache) {
-            Thread thread = Thread.currentThread();
-            Thread prev = threadCache.get();
-            if (prev != thread) {
-                String message = task + ": " + thread + "@" + thread.hashCode();
-                threadCache.set(thread);
-                System.out.println(message);
-                NetHandlerPlayClient connection = Minecraft.getMinecraft().getConnection();
-                if (connection != null) {
-                    connection.handleChat(new SPacketChat(new TextComponentString(message)));
-                }
-            }
-        }
-    }
 
     public EntityPlayer requestServerSinglePlayer(@Nonnull Minecraft minecraft) {
         EntityPlayerSP playerSP = minecraft.player;
@@ -111,7 +96,6 @@ public class FlightInstrument {
             if (playerSP != null && playerSP.isElytraFlying()) {
                 EntityPlayer player = requestServerSinglePlayer(minecraft);
                 if (player != null && player.isElytraFlying()) {
-                    printCurrentThread("tick");
                     double motionX = player.motionX;
                     double motionZ = player.motionZ;
                     double motionHorizon = Math.sqrt(motionX * motionX + motionZ * motionZ);
@@ -139,47 +123,55 @@ public class FlightInstrument {
     public void stopFlight() {
         if (duringFlight) {
             duringFlight = false;
-            fireworkTickCache.clear();
-            fireworkLifetimeRecord.clear();
+            synchronized (fireworkTickCache) {
+                fireworkTickCache.clear();
+            }
+            synchronized (fireworkLifetimeRecord) {
+                fireworkLifetimeRecord.clear();
+                fireworkTotalTime.set(0L);
+            }
         }
     }
 
     public void markFireworkUsage(UUID uuid, int lifetime) {
-        printCurrentThread("markFireworkUsage");
-        if (!fireworkTickCache.containsKey(uuid)) {
-            fireworkTickCache.put(uuid, currTripTick);
-            Integer key = lifetime;
-            Integer value = fireworkLifetimeRecord.get(key);
-            if (value == null) {
-                value = 0;
+        // TODO: 2023/7/21,0021 Do not record the client-side lifetime. Try query the server data. 
+        Integer lifetimeObj = lifetime;
+        boolean novel = false;
+        synchronized (fireworkTickCache) {
+            if (!fireworkTickCache.containsKey(uuid)) {
+                novel = true;
+                Long tickObj = currTripTick;
+                fireworkTickCache.put(uuid, tickObj);
             }
-            ++value;
-            fireworkLifetimeRecord.put(key, value);
         }
-        Set<Map.Entry<UUID, Long>> entrySet = fireworkTickCache.entrySet();
-        Iterator<Map.Entry<UUID, Long>> iterator = entrySet.iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<UUID, Long> entry = iterator.next();
-            Long value = entry.getValue();
-            if (value == null || currTripTick - value > MAX_FIREWORK_LIFETIME) {
-                iterator.remove();
-            } else {
-                break;
+        if (novel) {
+            fireworkLifetimeRecord.compute(lifetimeObj, this::appendFireworkRecord);
+            synchronized (fireworkTickCache) {
+                Set<Map.Entry<UUID, Long>> entrySet = fireworkTickCache.entrySet();
+                Iterator<Map.Entry<UUID, Long>> iterator = entrySet.iterator();
+                while (iterator.hasNext()) {
+                    Map.Entry<UUID, Long> entry = iterator.next();
+                    Long timestamp = entry.getValue();
+                    if (timestamp == null || currTripTick - timestamp > MAX_FIREWORK_LIFETIME) {
+                        iterator.remove();
+                    } else {
+                        break;
+                    }
+                }
             }
         }
     }
 
-    public void checkMarkFirework(EntityPlayer player, Entity entity) {
-        if (entity instanceof EntityFireworkRocket && player instanceof EntityPlayerSP) {
-            EntityFireworkRocket firework = (EntityFireworkRocket) entity;
-            if (firework instanceof AccessEntityFireworkRocket) {
-                EntityLivingBase payload = ((AccessEntityFireworkRocket) firework).getBoostedEntity();
-                if (payload instanceof EntityPlayer) {
+    public void checkMarkFirework(EntityPlayer player, AccessEntityFireworkRocket firework) {
+        if (firework instanceof Entity) {
+            if (player instanceof EntityPlayerSP && player.isElytraFlying()) {
+                EntityLivingBase payload = firework.getBoostedEntity();
+                if (payload instanceof EntityPlayer && payload.isElytraFlying()) {
                     UUID uuidHost = player.getUniqueID();
                     UUID uuidBoosted = payload.getUniqueID();
                     if (uuidBoosted.equals(uuidHost)) {
-                        int lifetime = ((AccessEntityFireworkRocket) firework).getLifetime();
-                        UUID uuidRocket = firework.getUniqueID();
+                        int lifetime = firework.getLifetime();
+                        UUID uuidRocket = ((Entity) firework).getUniqueID();
                         markFireworkUsage(uuidRocket, lifetime);
                     }
                 }
@@ -189,32 +181,68 @@ public class FlightInstrument {
 
     public void render(@Nonnull Minecraft minecraft, boolean inGame) {
         if (inGame && duringFlight) {
-            printCurrentThread("render");
             float reducedFallingDamage = packet.getReducedFallingDamage();
             float reducedCollisionDamage = packet.getReducedCollisionDamage();
             String text = String.format("Collision: %.1f / %.1f ; Falling: %.1f / %.1f",
                     packet.getCompleteCollisionDamage(), reducedCollisionDamage,
                     packet.getCompleteFallingDamage(), reducedFallingDamage);
-            FontRenderer fontRenderer = minecraft.fontRenderer;
-            int colorRGB = Color.WHITE.getRGB();
+            Color color;
             if (reducedFallingDamage >= health || reducedCollisionDamage >= health) {
-                colorRGB = Color.RED.getRGB();
-            }
-            ScaledResolution resolution = new ScaledResolution(minecraft);
-            int txtWidth = fontRenderer.getStringWidth(text);
-            int displayWidth = resolution.getScaledWidth();
-            int posX = (displayWidth - txtWidth) / 2;
-            int maxWidth = (int) (displayWidth * MAX_WIDTH_RATE);
-            int displayHeight = resolution.getScaledHeight();
-            if (txtWidth > maxWidth) {
-                int height = fontRenderer.getWordWrappedHeight(text, maxWidth);
-                int posY = (displayHeight - height) / 4;
-                posX = (displayWidth - maxWidth) / 2;
-                fontRenderer.drawSplitString(text, posX, posY, maxWidth, colorRGB);
+                color = Color.RED;
             } else {
-                int posY = (displayHeight - fontRenderer.FONT_HEIGHT) / 4;
-                fontRenderer.drawString(text, posX, posY, colorRGB);
+                color = Color.WHITE;
+            }
+            List<Tuple<String, Color>> textList = new ArrayList<>();
+            textList.add(new Tuple<>(text, color));
+            long totalFireworks = fireworkTotalTime.get();
+            textList.add(new Tuple<>("Total Firework Lifetime: " + totalFireworks, Color.WHITE));
+            long flightDuration = currTripTick - initTripTick;
+            textList.add(new Tuple<>("Total Flight Duration: " + flightDuration, Color.WHITE));
+            FontRenderer fontRenderer = minecraft.fontRenderer;
+            ScaledResolution resolution = new ScaledResolution(minecraft);
+            List<InfoLineRecord> displayedList = new ArrayList<>();
+            final int displayWidth = resolution.getScaledWidth();
+            final int displayHeight = resolution.getScaledHeight();
+            final int maxWidth = (int) (displayWidth * MAX_WIDTH_RATE);
+            int posDeltaX = 0;
+            int posDeltaY = 0;
+            int totalWidth = 0;
+            int totalHeight = 0;
+            // check block height of info lines
+            for (Tuple<String, Color> tuple : textList) {
+                int txtWidth = fontRenderer.getStringWidth(text);
+                int txtHeight = fontRenderer.FONT_HEIGHT;
+                boolean split = txtWidth > maxWidth;
+                if (split) {
+                    txtWidth = maxWidth;
+                    txtHeight = fontRenderer.getWordWrappedHeight(text, maxWidth);
+                }
+                totalHeight += txtHeight;
+                if (txtWidth > totalWidth) {
+                    totalWidth = txtWidth;
+                }
+                displayedList.add(new InfoLineRecord(tuple.getFirst(), posDeltaX, posDeltaY, tuple.getSecond().getRGB(), split));
+                posDeltaY += txtHeight;
+            }
+            // draw strings
+            int posGlobalX = (displayWidth - totalWidth) / 2;
+            int posGlobalY = displayHeight / 3 - totalHeight / 2;
+            for (InfoLineRecord record : displayedList) {
+                int posX = posGlobalX + record.posDeltaX;
+                int posY = posGlobalY + record.posDeltaY;
+                if (record.split) {
+                    fontRenderer.drawSplitString(record.text, posX, posY, maxWidth, record.color);
+                } else {
+                    fontRenderer.drawString(record.text, posX, posY, record.color);
+                }
             }
         }
+    }
+
+    @Nonnull
+    private Integer appendFireworkRecord(@Nonnull Integer key, Integer prev) {
+        int currValue = prev == null ? 1 : prev + 1;
+        fireworkTotalTime.addAndGet(key);
+        return currValue;
     }
 }
