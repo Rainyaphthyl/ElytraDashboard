@@ -10,6 +10,8 @@ public interface AccessEntityFireworkRocket {
     @Accessor(value = "boostedEntity")
     EntityLivingBase getBoostedEntity();
 
+    // TODO: 2023/7/21,0021 Single-player Data Query Boost 
+    @SuppressWarnings("unused")
     @Accessor(value = "lifetime")
     int getLifetime();
 
