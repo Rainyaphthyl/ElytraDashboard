@@ -6,7 +6,8 @@
   "mixins": [
     "AccessEntityFireworkRocket",
     "MixinEntityRenderer",
-    "MixinNetHandlerPlayClient"
+    "MixinNetHandlerPlayClient",
+    "MixinWorldClient"
   ],
   "injectors": {
     "defaultRequire": 1

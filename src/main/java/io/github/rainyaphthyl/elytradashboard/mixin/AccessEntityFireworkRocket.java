@@ -12,4 +12,7 @@ public interface AccessEntityFireworkRocket {
 
     @Accessor(value = "lifetime")
     int getLifetime();
+
+    @Accessor(value = "fireworkAge")
+    int getFireworkAge();
 }

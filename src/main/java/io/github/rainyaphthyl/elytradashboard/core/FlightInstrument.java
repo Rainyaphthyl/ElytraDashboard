@@ -1,14 +1,11 @@
 package io.github.rainyaphthyl.elytradashboard.core;
 
-import io.github.rainyaphthyl.elytradashboard.mixin.AccessEntityFireworkRocket;
 import io.github.rainyaphthyl.elytradashboard.util.InfoLineRecord;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiGameOver;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
@@ -134,7 +131,6 @@ public class FlightInstrument {
     }
 
     public void markFireworkUsage(UUID uuid, int lifetime) {
-        // TODO: 2023/7/21,0021 Do not record the client-side lifetime. Try query the server data. 
         Integer lifetimeObj = lifetime;
         boolean novel = false;
         synchronized (fireworkTickCache) {
@@ -156,23 +152,6 @@ public class FlightInstrument {
                         iterator.remove();
                     } else {
                         break;
-                    }
-                }
-            }
-        }
-    }
-
-    public void checkMarkFirework(EntityPlayer player, AccessEntityFireworkRocket firework) {
-        if (firework instanceof Entity) {
-            if (player instanceof EntityPlayerSP && player.isElytraFlying()) {
-                EntityLivingBase payload = firework.getBoostedEntity();
-                if (payload instanceof EntityPlayer && payload.isElytraFlying()) {
-                    UUID uuidHost = player.getUniqueID();
-                    UUID uuidBoosted = payload.getUniqueID();
-                    if (uuidBoosted.equals(uuidHost)) {
-                        int lifetime = firework.getLifetime();
-                        UUID uuidRocket = ((Entity) firework).getUniqueID();
-                        markFireworkUsage(uuidRocket, lifetime);
                     }
                 }
             }

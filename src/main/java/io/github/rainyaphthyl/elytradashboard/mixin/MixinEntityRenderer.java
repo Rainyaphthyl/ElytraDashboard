@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(EntityRenderer.class)
-public abstract class MixinEntityRenderer {
+public class MixinEntityRenderer {
     @Unique
     private final float[] elytraDashboard$bufferDeltas = new float[2];
     @Shadow
