@@ -15,12 +15,10 @@ import net.minecraft.util.math.MathHelper;
 
 import javax.annotation.Nonnull;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public class FlightInstrument {
@@ -31,6 +29,7 @@ public class FlightInstrument {
      * int lifetime = 10 * (1 + flightDuration) + rand.nextInt(6) + rand.nextInt(7);}
      * </pre>
      */
+    @SuppressWarnings("unused")
     public static final int MAX_FIREWORK_LIFETIME = 10 * (1 + Byte.MAX_VALUE) + 5 + 6;
     public static final double MAX_WIDTH_RATE = 0.75;
     /**
@@ -39,19 +38,6 @@ public class FlightInstrument {
     public static final boolean USING_SERVER_DATA = false;
     private final ElytraPacket packet = new ElytraPacket();
     private final AtomicReferenceArray<EntityPlayer> playerCache = new AtomicReferenceArray<>(2);
-    /**
-     * key: {@link UUID} - the UUID of the rocket
-     * <p>
-     * value: {@link Long} - the tick time when rocket is tracked, used for TTL cache
-     */
-    private final Map<UUID, Long> fireworkTickCache = new LinkedHashMap<>();
-    /**
-     * key: {@link Integer} - the actual lifetime of the rocket
-     * <p>
-     * value: {@link Integer} - the number of rockets with that lifetime
-     */
-    private final ConcurrentMap<Integer, Integer> fireworkLifetimeRecord = new ConcurrentHashMap<>();
-    private final AtomicLong fireworkTotalLifetime = new AtomicLong(0L);
     /**
      * Weighted fireworks usage
      */
@@ -97,7 +83,7 @@ public class FlightInstrument {
             EntityPlayerSP playerSP = minecraft.player;
             if (playerSP != null && playerSP.isElytraFlying()) {
                 EntityPlayer player = requestServerSinglePlayer(minecraft);
-                if (player != null && player.isElytraFlying()) {
+                if (player == playerSP || player != null && player.isElytraFlying()) {
                     double motionX = player.motionX;
                     double motionZ = player.motionZ;
                     double motionHorizon = Math.sqrt(motionX * motionX + motionZ * motionZ);
@@ -125,41 +111,6 @@ public class FlightInstrument {
     public void stopFlight() {
         if (duringFlight) {
             duringFlight = false;
-            synchronized (fireworkTickCache) {
-                fireworkTickCache.clear();
-            }
-            synchronized (fireworkLifetimeRecord) {
-                fireworkLifetimeRecord.clear();
-                fireworkTotalLifetime.set(0L);
-            }
-        }
-    }
-
-    public void markFireworkLifetime(UUID uuid, int lifetime) {
-        Integer lifetimeObj = lifetime;
-        boolean novel = false;
-        synchronized (fireworkTickCache) {
-            if (!fireworkTickCache.containsKey(uuid)) {
-                novel = true;
-                Long tickObj = currTripTick;
-                fireworkTickCache.put(uuid, tickObj);
-            }
-        }
-        if (novel) {
-            fireworkLifetimeRecord.compute(lifetimeObj, this::appendFireworkRecord);
-            synchronized (fireworkTickCache) {
-                Set<Map.Entry<UUID, Long>> entrySet = fireworkTickCache.entrySet();
-                Iterator<Map.Entry<UUID, Long>> iterator = entrySet.iterator();
-                while (iterator.hasNext()) {
-                    Map.Entry<UUID, Long> entry = iterator.next();
-                    Long timestamp = entry.getValue();
-                    if (timestamp == null || currTripTick - timestamp > MAX_FIREWORK_LIFETIME) {
-                        iterator.remove();
-                    } else {
-                        break;
-                    }
-                }
-            }
         }
     }
 
@@ -178,8 +129,6 @@ public class FlightInstrument {
             }
             List<Tuple<String, Color>> textList = new ArrayList<>();
             textList.add(new Tuple<>(text, color));
-            long totalFireworks = fireworkTotalLifetime.get();
-            textList.add(new Tuple<>("Total Firework Lifetime: " + totalFireworks, Color.WHITE));
             long flightDuration = currTripTick - initTripTick;
             textList.add(new Tuple<>("Total Flight Duration: " + flightDuration, Color.WHITE));
             FontRenderer fontRenderer = minecraft.fontRenderer;
@@ -221,12 +170,5 @@ public class FlightInstrument {
                 }
             }
         }
-    }
-
-    @Nonnull
-    private Integer appendFireworkRecord(@Nonnull Integer key, Integer prev) {
-        int currValue = prev == null ? 1 : prev + 1;
-        fireworkTotalLifetime.addAndGet(key);
-        return currValue;
     }
 }
