@@ -4,10 +4,8 @@
   "package": "io.github.rainyaphthyl.elytradashboard.mixin",
   "refmap": "mixins.elytradashboard.refmap.json",
   "mixins": [
-    "AccessEntityFireworkRocket",
     "MixinEntityRenderer",
-    "MixinItemFirework",
-    "MixinWorldClient"
+    "MixinItemFirework"
   ],
   "injectors": {
     "defaultRequire": 1
