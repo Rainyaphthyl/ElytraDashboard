@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
@@ -50,7 +51,11 @@ public class FlightInstrument {
      * value: {@link Integer} - the number of rockets with that lifetime
      */
     private final ConcurrentMap<Integer, Integer> fireworkLifetimeRecord = new ConcurrentHashMap<>();
-    private final AtomicLong fireworkTotalTime = new AtomicLong(0L);
+    private final AtomicLong fireworkTotalLifetime = new AtomicLong(0L);
+    /**
+     * Weighted fireworks usage
+     */
+    private final AtomicInteger gunpowderTotalUsage = new AtomicInteger(0);
     private long initTripTick = 0L;
     private long currTripTick = 0L;
     private float health = 0.0F;
@@ -125,12 +130,12 @@ public class FlightInstrument {
             }
             synchronized (fireworkLifetimeRecord) {
                 fireworkLifetimeRecord.clear();
-                fireworkTotalTime.set(0L);
+                fireworkTotalLifetime.set(0L);
             }
         }
     }
 
-    public void markFireworkUsage(UUID uuid, int lifetime) {
+    public void markFireworkLifetime(UUID uuid, int lifetime) {
         Integer lifetimeObj = lifetime;
         boolean novel = false;
         synchronized (fireworkTickCache) {
@@ -173,7 +178,7 @@ public class FlightInstrument {
             }
             List<Tuple<String, Color>> textList = new ArrayList<>();
             textList.add(new Tuple<>(text, color));
-            long totalFireworks = fireworkTotalTime.get();
+            long totalFireworks = fireworkTotalLifetime.get();
             textList.add(new Tuple<>("Total Firework Lifetime: " + totalFireworks, Color.WHITE));
             long flightDuration = currTripTick - initTripTick;
             textList.add(new Tuple<>("Total Flight Duration: " + flightDuration, Color.WHITE));
@@ -221,7 +226,7 @@ public class FlightInstrument {
     @Nonnull
     private Integer appendFireworkRecord(@Nonnull Integer key, Integer prev) {
         int currValue = prev == null ? 1 : prev + 1;
-        fireworkTotalTime.addAndGet(key);
+        fireworkTotalLifetime.addAndGet(key);
         return currValue;
     }
 }

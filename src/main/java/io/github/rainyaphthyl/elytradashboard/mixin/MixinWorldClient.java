@@ -29,18 +29,16 @@ public class MixinWorldClient {
             EntityPlayerSP player = mc.player;
             if (player != null && player.isElytraFlying()) {
                 EntityLivingBase payload = ((AccessEntityFireworkRocket) entity).getBoostedEntity();
-                if (payload instanceof EntityPlayer && payload.isElytraFlying()) {
-                    boolean flag = payload == player;
-                    if (!flag) {
-                        UUID uuidHost = player.getUniqueID();
-                        UUID uuidBoosted = payload.getUniqueID();
-                        flag = uuidBoosted.equals(uuidHost);
-                    }
-                    if (flag) {
-                        int lifetime = ((AccessEntityFireworkRocket) entity).getFireworkAge();
-                        UUID uuidRocket = entity.getUniqueID();
-                        References.flightInstrument.markFireworkUsage(uuidRocket, lifetime);
-                    }
+                boolean flag = payload == player;
+                if (!flag && payload instanceof EntityPlayer && payload.isElytraFlying()) {
+                    UUID uuidHost = player.getUniqueID();
+                    UUID uuidBoosted = payload.getUniqueID();
+                    flag = uuidBoosted.equals(uuidHost);
+                }
+                if (flag) {
+                    int lifetime = ((AccessEntityFireworkRocket) entity).getFireworkAge();
+                    UUID uuidRocket = entity.getUniqueID();
+                    References.flightInstrument.markFireworkLifetime(uuidRocket, lifetime);
                 }
             }
         }
