@@ -15,22 +15,15 @@ import net.minecraft.util.math.MathHelper;
 
 import javax.annotation.Nonnull;
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class FlightInstrument {
-    /**
-     * {@code flightDuration} is ordinarily 1, 2, or 3, but it is actually stored in a byte tag, up to 127?
-     * <pre>
-     * {@code Random rand = new Random();
-     * int lifetime = 10 * (1 + flightDuration) + rand.nextInt(6) + rand.nextInt(7);}
-     * </pre>
-     */
-    @SuppressWarnings("unused")
-    public static final int MAX_FIREWORK_LIFETIME = 10 * (1 + Byte.MAX_VALUE) + 5 + 6;
     public static final double MAX_WIDTH_RATE = 0.75;
     /**
      * Seems that it should use the client data...
@@ -42,6 +35,8 @@ public class FlightInstrument {
      * Weighted fireworks usage
      */
     private final AtomicInteger gunpowderTotalUsage = new AtomicInteger(0);
+    private final Map<Byte, Integer> fireworkLevelMap = new HashMap<>();
+    private final ReadWriteLock fireworkLock = new ReentrantReadWriteLock(true);
     private long initTripTick = 0L;
     private long currTripTick = 0L;
     private float health = 0.0F;
@@ -111,7 +106,31 @@ public class FlightInstrument {
     public void stopFlight() {
         if (duringFlight) {
             duringFlight = false;
+            Lock writeLock = fireworkLock.writeLock();
+            writeLock.lock();
+            try {
+                fireworkLevelMap.clear();
+                gunpowderTotalUsage.set(0);
+            } finally {
+                writeLock.unlock();
+            }
         }
+    }
+
+    public void asyncRecordFirework(byte level) {
+        Runnable task = () -> {
+            Lock writeLock = fireworkLock.writeLock();
+            writeLock.lock();
+            try {
+                fireworkLevelMap.compute(level, (key, value) -> value == null ? 1 : value + 1);
+                gunpowderTotalUsage.addAndGet(level);
+            } finally {
+                writeLock.unlock();
+            }
+        };
+        Thread thread = new Thread(task, "Firework Logger");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     public void render(@Nonnull Minecraft minecraft, boolean inGame) {
@@ -131,6 +150,15 @@ public class FlightInstrument {
             textList.add(new Tuple<>(text, color));
             long flightDuration = currTripTick - initTripTick;
             textList.add(new Tuple<>("Total Flight Duration: " + flightDuration, Color.WHITE));
+            int fireworkUsage;
+            Lock readLock = fireworkLock.readLock();
+            readLock.lock();
+            try {
+                fireworkUsage = gunpowderTotalUsage.get();
+            } finally {
+                readLock.unlock();
+            }
+            textList.add(new Tuple<>("Total Firework Fuel: " + fireworkUsage, Color.WHITE));
             FontRenderer fontRenderer = minecraft.fontRenderer;
             ScaledResolution resolution = new ScaledResolution(minecraft);
             List<InfoLineRecord> displayedList = new ArrayList<>();
