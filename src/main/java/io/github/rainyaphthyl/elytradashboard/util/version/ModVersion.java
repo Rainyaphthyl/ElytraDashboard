@@ -13,6 +13,7 @@ public class ModVersion implements Comparable<ModVersion> {
     private final int patch;
     private final AppendingVersion preLabels;
     private final AtomicReference<String> text = new AtomicReference<>(null);
+    private AppendingVersion buildInfo = null;
 
     @ParametersAreNullableByDefault
     private ModVersion(int major, int minor, int patch, AppendingVersion preLabels) {
@@ -22,7 +23,6 @@ public class ModVersion implements Comparable<ModVersion> {
         this.preLabels = preLabels;
     }
 
-    @SuppressWarnings({"unused", "UnusedAssignment"})
     public static ModVersion getVersion(String versionName) {
         if (versionName == null) {
             return null;
@@ -68,7 +68,9 @@ public class ModVersion implements Comparable<ModVersion> {
             return null;
         }
         AppendingVersion appendix = AppendingVersion.getAppendix(pre);
-        return new ModVersion(coreNums[0], coreNums[1], coreNums[2], appendix);
+        ModVersion version = new ModVersion(coreNums[0], coreNums[1], coreNums[2], appendix);
+        version.buildInfo = AppendingVersion.getAppendix(build);
+        return version;
     }
 
     @Override
@@ -106,4 +108,11 @@ public class ModVersion implements Comparable<ModVersion> {
         }
     }
 
+    public AppendingVersion getBuildInfo() {
+        return buildInfo;
+    }
+
+    public void setBuildInfo(AppendingVersion buildInfo) {
+        this.buildInfo = buildInfo;
+    }
 }

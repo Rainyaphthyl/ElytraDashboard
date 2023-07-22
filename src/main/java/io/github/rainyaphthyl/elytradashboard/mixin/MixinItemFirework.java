@@ -1,6 +1,7 @@
 package io.github.rainyaphthyl.elytradashboard.mixin;
 
 import io.github.rainyaphthyl.elytradashboard.core.References;
+import io.github.rainyaphthyl.elytradashboard.util.GenericHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.player.EntityPlayer;
@@ -15,7 +16,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import javax.annotation.Nonnull;
-import java.util.UUID;
 
 @Mixin(ItemFirework.class)
 public class MixinItemFirework extends Item {
@@ -28,9 +28,7 @@ public class MixinItemFirework extends Item {
         boolean accessible;
         if (client.isSingleplayer()) {
             if (playerIn instanceof EntityPlayerMP && playerHost != null) {
-                UUID uuidHost = playerHost.getUniqueID();
-                UUID uuidServer = playerIn.getUniqueID();
-                accessible = uuidHost.equals(uuidServer);
+                accessible = GenericHelper.equalsUnique(playerIn, playerHost);
             } else {
                 accessible = false;
             }

@@ -16,7 +16,6 @@ public class LiteModElytraDashboard implements Configurable, InitCompleteListene
     public static final String VERSION = "0.2.0";
     private static ModVersion versionObj = null;
 
-    @SuppressWarnings("unused")
     public static ModVersion getVersionObj() {
         if (versionObj == null) {
             versionObj = ModVersion.getVersion(VERSION);
@@ -24,7 +23,6 @@ public class LiteModElytraDashboard implements Configurable, InitCompleteListene
         return versionObj;
     }
 
-    @SuppressWarnings("SameReturnValue")
     public ModSettings getSettings() {
         return ModSettings.INSTANCE;
     }
