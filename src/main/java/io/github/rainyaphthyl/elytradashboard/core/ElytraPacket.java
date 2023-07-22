@@ -1,4 +1,4 @@
-package io.github.rainyaphthyl.elytradashboard.display;
+package io.github.rainyaphthyl.elytradashboard.core;
 
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.ItemStack;

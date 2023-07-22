@@ -6,7 +6,7 @@ import com.mumfrey.liteloader.core.LiteLoader;
 import com.mumfrey.liteloader.modconfig.ConfigStrategy;
 import com.mumfrey.liteloader.modconfig.Exposable;
 import com.mumfrey.liteloader.modconfig.ExposableOptions;
-import io.github.rainyaphthyl.elytradashboard.util.FileHelper;
+import io.github.rainyaphthyl.elytradashboard.util.GenericHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,7 +66,7 @@ public class ModSettings implements Exposable {
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS.ZZZZ", Locale.CANADA_FRENCH);
                     String dateTxt = dateFormat.format(dateObj);
                     String archiveName = FILE_NAME + "." + dateTxt + BACKUP_POSTFIX;
-                    FileHelper.copyFile(backupFile, new File(configPath, archiveName));
+                    GenericHelper.copyFile(backupFile, new File(configPath, archiveName));
                 }
                 if (backupRequiring) {
                     if (protectRequiring) {
@@ -74,7 +74,7 @@ public class ModSettings implements Exposable {
                         liteLoader.writeConfig(INSTANCE);
                         registered = true;
                     }
-                    FileHelper.copyFile(configFile, backupFile);
+                    GenericHelper.copyFile(configFile, backupFile);
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
