@@ -20,4 +20,11 @@ public class Vec3dPool {
         this.y = y;
         this.z = z;
     }
+
+    public void setValues(Vec3dPool that) {
+        if (that == null) return;
+        x = that.x;
+        y = that.y;
+        z = that.z;
+    }
 }

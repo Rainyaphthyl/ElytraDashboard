@@ -126,7 +126,7 @@ public class FlightInstrument {
                 if (player == playerSP || player != null && player.isElytraFlying()) {
                     long currTripTick = minecraft.world.getTotalWorldTime();
                     if (!duringFlight) {
-                        tripPacket.initPos.setValues(player.posX, player.posY, player.posZ);
+                        tripPacket.setInitPosition(player.posX, player.posY, player.posZ);
                         initTripTick = currTripTick;
                         duringFlight = true;
                     }
@@ -192,12 +192,16 @@ public class FlightInstrument {
                 poolColor.set(fireworkPacket.fuelError.get() ? Color.LIGHT_GRAY : Color.WHITE);
             });
             textList.add(new Tuple<>("Firework Fuels: " + poolInt.get(), poolColor.get()));
-            double tripEfficiency = tripPacket.getHorizonVelocity();
-            double tripDistance = tripPacket.getHorizonDisplacement();
-            double fuelEfficiency = (double) poolInt.get() / tripDistance;
+            double displacement = tripPacket.getHorizonDisplacement();
+            double velocity = tripPacket.getHorizonVelocity();
+            double distance = tripPacket.getHorizonDistance();
+            double speed = tripPacket.getHorizonSpeed();
+            double fuelEfficiency = (double) poolInt.get() / distance;
             textList.add(new Tuple<>(String.format("Avg Fuel Efficiency: %.2f GPD/km", fuelEfficiency * 1000), Color.WHITE));
-            textList.add(new Tuple<>(String.format("Avg XZ Velocity: %.2f m/s", tripEfficiency * 20.0), Color.WHITE));
-            textList.add(new Tuple<>(String.format("Total XZ Distance: %.0f m", tripDistance), Color.WHITE));
+            textList.add(new Tuple<>(String.format("Avg XZ Velocity: %.2f m/s", velocity * 20.0), Color.WHITE));
+            textList.add(new Tuple<>(String.format("Total XZ Displacement: %.0f m", displacement), Color.WHITE));
+            textList.add(new Tuple<>(String.format("Avg XZ Speed: %.2f m/s", speed * 20.0), Color.WHITE));
+            textList.add(new Tuple<>(String.format("Total XZ Distance: %.0f m", distance), Color.WHITE));
             renderInfoLines(minecraft, textList);
         }
     }
