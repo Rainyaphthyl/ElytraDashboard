@@ -1,4 +1,4 @@
-package io.github.rainyaphthyl.elytradashboard.core;
+package io.github.rainyaphthyl.elytradashboard.core.record;
 
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.ItemStack;
@@ -7,13 +7,13 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.CombatRules;
 import net.minecraft.util.DamageSource;
 
-public class ElytraPacket {
+public class InstantPacket extends AsyncPacket {
     /**
      * The raw value of {@link DamageSource#FLY_INTO_WALL}
      */
     private float completeCollisionDamage = 0.0F;
     /**
-     * The value of {@link DamageSource#FLY_INTO_WALL} reduced <b>only</b> by armors (with enchantments). Requires {@link ElytraPacket#applyReducedDamages} invocation.
+     * The value of {@link DamageSource#FLY_INTO_WALL} reduced <b>only</b> by armors (with enchantments). Requires {@link InstantPacket#applyReducedDamages} invocation.
      */
     private float reducedCollisionDamage = 0.0F;
     /**
@@ -21,12 +21,9 @@ public class ElytraPacket {
      */
     private float completeFallingDamage = 0.0F;
     /**
-     * The value of {@link DamageSource#FALL} reduced <b>only</b> by armors (with enchantments). Requires {@link ElytraPacket#applyReducedDamages} invocation.
+     * The value of {@link DamageSource#FALL} reduced <b>only</b> by armors (with enchantments). Requires {@link InstantPacket#applyReducedDamages} invocation.
      */
     private float reducedFallingDamage = 0.0F;
-
-    public ElytraPacket() {
-    }
 
     public static float getReducedDamage(float damage, int modifier) {
         if (damage <= 0.0F) {
@@ -76,7 +73,7 @@ public class ElytraPacket {
     }
 
     /**
-     * The value of {@link DamageSource#FLY_INTO_WALL} reduced <b>only</b> by armors (with enchantments). Requires {@link ElytraPacket#applyReducedDamages} invocation.
+     * The value of {@link DamageSource#FLY_INTO_WALL} reduced <b>only</b> by armors (with enchantments). Requires {@link InstantPacket#applyReducedDamages} invocation.
      */
     public float getReducedCollisionDamage() {
         return reducedCollisionDamage;
@@ -94,7 +91,7 @@ public class ElytraPacket {
     }
 
     /**
-     * The value of {@link DamageSource#FALL} reduced <b>only</b> by armors (with enchantments). Requires {@link ElytraPacket#applyReducedDamages} invocation.
+     * The value of {@link DamageSource#FALL} reduced <b>only</b> by armors (with enchantments). Requires {@link InstantPacket#applyReducedDamages} invocation.
      */
     public float getReducedFallingDamage() {
         return reducedFallingDamage;

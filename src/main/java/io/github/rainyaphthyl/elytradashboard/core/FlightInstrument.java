@@ -1,5 +1,8 @@
 package io.github.rainyaphthyl.elytradashboard.core;
 
+import io.github.rainyaphthyl.elytradashboard.core.record.EnumRW;
+import io.github.rainyaphthyl.elytradashboard.core.record.FireworkPacket;
+import io.github.rainyaphthyl.elytradashboard.core.record.InstantPacket;
 import io.github.rainyaphthyl.elytradashboard.util.GenericHelper;
 import io.github.rainyaphthyl.elytradashboard.util.InfoLineRecord;
 import net.minecraft.client.Minecraft;
@@ -16,14 +19,12 @@ import net.minecraft.util.math.MathHelper;
 
 import javax.annotation.Nonnull;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class FlightInstrument {
     public static final double MAX_WIDTH_RATE = 0.75;
@@ -31,24 +32,15 @@ public class FlightInstrument {
      * Seems that it should use the client data...
      */
     public static final boolean USING_SERVER_DATA = false;
-    private final ElytraPacket packet = new ElytraPacket();
+    private final InstantPacket instantPacket = new InstantPacket();
+    private final FireworkPacket fireworkPacket = new FireworkPacket();
     private final AtomicReferenceArray<EntityPlayer> playerCache = new AtomicReferenceArray<>(2);
-    /**
-     * Weighted fireworks usage
-     */
-    private final AtomicInteger gunpowderTotalUsage = new AtomicInteger(0);
-    /**
-     * Set to {@code true} if fireworks with negative gunpowder number are used
-     */
-    private final AtomicBoolean gunpowderUnexpected = new AtomicBoolean(false);
-    private final Map<Byte, Integer> fireworkLevelMap = new HashMap<>();
-    private final ReadWriteLock fireworkLock = new ReentrantReadWriteLock(true);
     private long initTripTick = 0L;
     private long currTripTick = 0L;
     private float health = 0.0F;
     private boolean duringFlight = false;
 
-    public static void renderInfoLines(@Nonnull Minecraft minecraft, @Nonnull List<Tuple<String, Color>> textList) {
+    private static void renderInfoLines(@Nonnull Minecraft minecraft, @Nonnull List<Tuple<String, Color>> textList) {
         FontRenderer fontRenderer = minecraft.fontRenderer;
         ScaledResolution resolution = new ScaledResolution(minecraft);
         List<InfoLineRecord> displayedList = new ArrayList<>();
@@ -91,6 +83,11 @@ public class FlightInstrument {
         }
     }
 
+    @Nonnull
+    private static Integer increase(Byte key, Integer value) {
+        return value == null ? 1 : value + 1;
+    }
+
     public EntityPlayer requestServerSinglePlayer(@Nonnull Minecraft minecraft) {
         EntityPlayerSP playerSP = minecraft.player;
         if (USING_SERVER_DATA && minecraft.isSingleplayer()) {
@@ -130,14 +127,14 @@ public class FlightInstrument {
                     double motionX = player.motionX;
                     double motionZ = player.motionZ;
                     double motionHorizon = Math.sqrt(motionX * motionX + motionZ * motionZ);
-                    packet.setCompleteCollisionDamage((float) (motionHorizon * 10.0 - 3.0));
+                    instantPacket.setCompleteCollisionDamage((float) (motionHorizon * 10.0 - 3.0));
                     float fallDistance = player.fallDistance;
                     if (fallDistance > 0.0F) {
-                        packet.setCompleteFallingDamage((float) MathHelper.ceil(fallDistance - 3.0F));
+                        instantPacket.setCompleteFallingDamage((float) MathHelper.ceil(fallDistance - 3.0F));
                     } else {
-                        packet.setCompleteFallingDamage(0.0F);
+                        instantPacket.setCompleteFallingDamage(0.0F);
                     }
-                    packet.applyReducedDamages(player.getArmorInventoryList());
+                    instantPacket.applyReducedDamages(player.getArmorInventoryList());
                     health = player.getHealth();
                     currTripTick = minecraft.world.getTotalWorldTime();
                     if (!duringFlight) {
@@ -151,33 +148,19 @@ public class FlightInstrument {
         stopFlight();
     }
 
-    public void stopFlight() {
+    private void stopFlight() {
         if (duringFlight) {
             duringFlight = false;
-            Lock writeLock = fireworkLock.writeLock();
-            writeLock.lock();
-            try {
-                fireworkLevelMap.clear();
-                gunpowderTotalUsage.set(0);
-                gunpowderUnexpected.set(false);
-            } finally {
-                writeLock.unlock();
-            }
+            fireworkPacket.runSyncTask(EnumRW.WRITE, this::resetFirework);
         }
     }
 
     public void asyncRecordFirework(byte level) {
-        Runnable task = () -> {
-            Lock writeLock = fireworkLock.writeLock();
-            writeLock.lock();
-            try {
-                fireworkLevelMap.compute(level, (key, value) -> value == null ? 1 : value + 1);
-                gunpowderTotalUsage.addAndGet(level);
-                gunpowderUnexpected.compareAndSet(false, level < 0);
-            } finally {
-                writeLock.unlock();
-            }
-        };
+        Runnable task = () -> fireworkPacket.runSyncTask(EnumRW.WRITE, () -> {
+            fireworkPacket.levelMap.compute(level, FlightInstrument::increase);
+            fireworkPacket.fuelCount.addAndGet(level);
+            fireworkPacket.fuelError.compareAndSet(false, level < 0);
+        });
         Thread thread = new Thread(task, "Firework Logger");
         thread.setDaemon(true);
         thread.start();
@@ -185,28 +168,33 @@ public class FlightInstrument {
 
     public void render(@Nonnull Minecraft minecraft, boolean inGame) {
         if (inGame && duringFlight) {
-            float reducedCollisionDamage = packet.getReducedCollisionDamage();
-            String text = String.format("Collision Damage: %.2f / %.2f", packet.getCompleteCollisionDamage(), reducedCollisionDamage);
+            float reducedCollisionDamage = instantPacket.getReducedCollisionDamage();
+            String text = String.format("Collision Damage: %.2f / %.2f", instantPacket.getCompleteCollisionDamage(), reducedCollisionDamage);
             Color color = reducedCollisionDamage >= health ? Color.RED : Color.WHITE;
             List<Tuple<String, Color>> textList = new ArrayList<>();
             textList.add(new Tuple<>(text, color));
-            float reducedFallingDamage = packet.getReducedFallingDamage();
+            float reducedFallingDamage = instantPacket.getReducedFallingDamage();
             color = reducedFallingDamage >= health ? Color.RED : Color.WHITE;
-            text = String.format("Falling Damage: %.2f / %.2f", packet.getCompleteFallingDamage(), reducedFallingDamage);
+            text = String.format("Falling Damage: %.2f / %.2f", instantPacket.getCompleteFallingDamage(), reducedFallingDamage);
             textList.add(new Tuple<>(text, color));
             long flightDuration = currTripTick - initTripTick;
             textList.add(new Tuple<>("Flight Duration: " + flightDuration, Color.WHITE));
-            int fireworkUsage;
-            Lock readLock = fireworkLock.readLock();
-            readLock.lock();
-            try {
-                fireworkUsage = gunpowderTotalUsage.get();
-                color = gunpowderUnexpected.get() ? Color.LIGHT_GRAY : Color.WHITE;
-            } finally {
-                readLock.unlock();
-            }
-            textList.add(new Tuple<>("Firework Fuels: " + fireworkUsage, color));
+            AtomicInteger poolInt = new AtomicInteger(0);
+            AtomicReference<Color> poolColor = new AtomicReference<>(null);
+            fireworkPacket.runSyncTask(EnumRW.READ, () -> {
+                int fireworkUsage = fireworkPacket.fuelCount.get();
+                poolInt.set(fireworkUsage);
+                Color tempColor = fireworkPacket.fuelError.get() ? Color.LIGHT_GRAY : Color.WHITE;
+                poolColor.set(tempColor);
+            });
+            textList.add(new Tuple<>("Firework Fuels: " + poolInt.get(), poolColor.get()));
             renderInfoLines(minecraft, textList);
         }
+    }
+
+    private void resetFirework() {
+        fireworkPacket.levelMap.clear();
+        fireworkPacket.fuelCount.set(0);
+        fireworkPacket.fuelError.set(false);
     }
 }
