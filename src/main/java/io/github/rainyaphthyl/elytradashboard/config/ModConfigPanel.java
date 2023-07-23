@@ -8,7 +8,6 @@ import io.github.rainyaphthyl.elytradashboard.LiteModElytraDashboard;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 
-@SuppressWarnings("unused")
 public class ModConfigPanel extends AbstractConfigPanel {
     private static final int CHECKBOX_HEIGHT = 12;
     private final ModSettings tempSettings = new ModSettings(ModSettings.INSTANCE);

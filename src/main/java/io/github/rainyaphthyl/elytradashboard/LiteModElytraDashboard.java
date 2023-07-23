@@ -13,10 +13,9 @@ import java.io.File;
 
 public class LiteModElytraDashboard implements Configurable, InitCompleteListener {
     public static final String NAME = "Elytra Dashboard";
-    public static final String VERSION = "0.2.0";
+    public static final String VERSION = "0.2.1";
     private static ModVersion versionObj = null;
 
-    @SuppressWarnings("unused")
     public static ModVersion getVersionObj() {
         if (versionObj == null) {
             versionObj = ModVersion.getVersion(VERSION);
@@ -24,7 +23,6 @@ public class LiteModElytraDashboard implements Configurable, InitCompleteListene
         return versionObj;
     }
 
-    @SuppressWarnings("SameReturnValue")
     public ModSettings getSettings() {
         return ModSettings.INSTANCE;
     }
