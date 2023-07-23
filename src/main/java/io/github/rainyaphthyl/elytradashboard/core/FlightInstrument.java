@@ -34,10 +34,10 @@ public class FlightInstrument {
     public static final boolean USING_SERVER_DATA = false;
     private final InstantPacket instantPacket = new InstantPacket();
     private final FireworkPacket fireworkPacket = new FireworkPacket();
+    private final TripPacket tripPacket = new TripPacket();
     private final AtomicReferenceArray<EntityPlayer> playerCache = new AtomicReferenceArray<>(2);
     private long initTripTick = 0L;
-    private long currTripTick = 0L;
-    private float health = 0.0F;
+    private long tripDuration = 0L;
     private boolean duringFlight = false;
 
     private static void renderInfoLines(@Nonnull Minecraft minecraft, @Nonnull List<Tuple<String, Color>> textList) {
@@ -124,28 +124,35 @@ public class FlightInstrument {
             if (playerSP != null && playerSP.isElytraFlying()) {
                 EntityPlayer player = requestServerSinglePlayer(minecraft);
                 if (player == playerSP || player != null && player.isElytraFlying()) {
-                    double motionX = player.motionX;
-                    double motionZ = player.motionZ;
-                    double motionHorizon = Math.sqrt(motionX * motionX + motionZ * motionZ);
-                    instantPacket.setCompleteCollisionDamage((float) (motionHorizon * 10.0 - 3.0));
-                    float fallDistance = player.fallDistance;
-                    if (fallDistance > 0.0F) {
-                        instantPacket.setCompleteFallingDamage((float) MathHelper.ceil(fallDistance - 3.0F));
-                    } else {
-                        instantPacket.setCompleteFallingDamage(0.0F);
-                    }
-                    instantPacket.applyReducedDamages(player.getArmorInventoryList());
-                    health = player.getHealth();
-                    currTripTick = minecraft.world.getTotalWorldTime();
+                    long currTripTick = minecraft.world.getTotalWorldTime();
                     if (!duringFlight) {
+                        tripPacket.initPos.setValues(player.posX, player.posY, player.posZ);
                         initTripTick = currTripTick;
                         duringFlight = true;
                     }
+                    tripDuration = currTripTick - initTripTick;
+                    updateElytraData(player);
+                    tripPacket.updateVelocity(player.posX, player.posY, player.posZ, tripDuration);
                     return;
                 }
             }
         }
         stopFlight();
+    }
+
+    private void updateElytraData(@Nonnull EntityPlayer player) {
+        double motionX = player.motionX;
+        double motionZ = player.motionZ;
+        double motionHorizon = Math.sqrt(motionX * motionX + motionZ * motionZ);
+        instantPacket.setCompleteCollisionDamage((float) (motionHorizon * 10.0 - 3.0));
+        float fallDistance = player.fallDistance;
+        if (fallDistance > 0.0F) {
+            instantPacket.setCompleteFallingDamage((float) MathHelper.ceil(fallDistance - 3.0F));
+        } else {
+            instantPacket.setCompleteFallingDamage(0.0F);
+        }
+        instantPacket.applyReducedDamages(player.getArmorInventoryList());
+        instantPacket.health = player.getHealth();
     }
 
     private void stopFlight() {
@@ -170,24 +177,27 @@ public class FlightInstrument {
         if (inGame && duringFlight) {
             float reducedCollisionDamage = instantPacket.getReducedCollisionDamage();
             String text = String.format("Collision Damage: %.2f / %.2f", instantPacket.getCompleteCollisionDamage(), reducedCollisionDamage);
-            Color color = reducedCollisionDamage >= health ? Color.RED : Color.WHITE;
+            Color color = reducedCollisionDamage >= instantPacket.health ? Color.RED : Color.WHITE;
             List<Tuple<String, Color>> textList = new ArrayList<>();
             textList.add(new Tuple<>(text, color));
             float reducedFallingDamage = instantPacket.getReducedFallingDamage();
-            color = reducedFallingDamage >= health ? Color.RED : Color.WHITE;
+            color = reducedFallingDamage >= instantPacket.health ? Color.RED : Color.WHITE;
             text = String.format("Falling Damage: %.2f / %.2f", instantPacket.getCompleteFallingDamage(), reducedFallingDamage);
             textList.add(new Tuple<>(text, color));
-            long flightDuration = currTripTick - initTripTick;
-            textList.add(new Tuple<>("Flight Duration: " + flightDuration, Color.WHITE));
+            textList.add(new Tuple<>("Flight Duration: " + tripDuration, Color.WHITE));
             AtomicInteger poolInt = new AtomicInteger(0);
             AtomicReference<Color> poolColor = new AtomicReference<>(null);
             fireworkPacket.runSyncTask(EnumRW.READ, () -> {
-                int fireworkUsage = fireworkPacket.fuelCount.get();
-                poolInt.set(fireworkUsage);
-                Color tempColor = fireworkPacket.fuelError.get() ? Color.LIGHT_GRAY : Color.WHITE;
-                poolColor.set(tempColor);
+                poolInt.set(fireworkPacket.fuelCount.get());
+                poolColor.set(fireworkPacket.fuelError.get() ? Color.LIGHT_GRAY : Color.WHITE);
             });
             textList.add(new Tuple<>("Firework Fuels: " + poolInt.get(), poolColor.get()));
+            double tripEfficiency = tripPacket.getHorizonVelocity();
+            double tripDistance = tripPacket.getHorizonDisplacement();
+            double fuelEfficiency = (double) poolInt.get() / tripDistance;
+            textList.add(new Tuple<>(String.format("Avg Fuel Efficiency: %.2f GPD/km", fuelEfficiency * 1000), Color.WHITE));
+            textList.add(new Tuple<>(String.format("Avg XZ Velocity: %.2f m/s", tripEfficiency * 20.0), Color.WHITE));
+            textList.add(new Tuple<>(String.format("Total XZ Distance: %.0f m", tripDistance), Color.WHITE));
             renderInfoLines(minecraft, textList);
         }
     }

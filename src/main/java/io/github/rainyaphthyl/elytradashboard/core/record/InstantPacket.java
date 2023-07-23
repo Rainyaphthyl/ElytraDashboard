@@ -7,7 +7,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.CombatRules;
 import net.minecraft.util.DamageSource;
 
-public class InstantPacket extends AsyncPacket {
+public class InstantPacket {
     /**
      * The raw value of {@link DamageSource#FLY_INTO_WALL}
      */
@@ -24,6 +24,7 @@ public class InstantPacket extends AsyncPacket {
      * The value of {@link DamageSource#FALL} reduced <b>only</b> by armors (with enchantments). Requires {@link InstantPacket#applyReducedDamages} invocation.
      */
     private float reducedFallingDamage = 0.0F;
+    public float health = 0.0F;
 
     public static float getReducedDamage(float damage, int modifier) {
         if (damage <= 0.0F) {

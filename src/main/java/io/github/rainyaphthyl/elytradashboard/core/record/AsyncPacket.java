@@ -33,5 +33,4 @@ public abstract class AsyncPacket {
             lock.unlock();
         }
     }
-
 }
