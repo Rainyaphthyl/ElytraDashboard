@@ -31,9 +31,10 @@ public class MixinEntityRenderer {
     private void onTickRenderer(CallbackInfo ci) {
         Profiler profiler = mc.profiler;
         profiler.startSection("elytraKeyInput");
-        if (ModSettings.INSTANCE.keyboardElytraEnabled && mc.player.isElytraFlying()) {
+        if (ModSettings.INSTANCE.keyboardElytraEnabled) {
+            boolean flying = mc.player.isElytraFlying();
             GameSettings gameSettings = mc.gameSettings;
-            References.keyboardRotator.updateTickRotation(gameSettings);
+            References.keyboardRotator.updateTickRotation(gameSettings, flying);
         }
         profiler.endStartSection("tickInstrument");
         if (ModSettings.INSTANCE.dashboardEnabled) {

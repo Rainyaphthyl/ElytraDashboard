@@ -1,6 +1,7 @@
 package io.github.rainyaphthyl.elytradashboard.core;
 
 import net.minecraft.client.settings.GameSettings;
+import net.minecraft.client.settings.KeyBinding;
 
 import javax.annotation.Nonnull;
 
@@ -19,6 +20,10 @@ public class KeyboardRotator {
     private float prevPartialTick = 0.0F;
     private float prevSensitivity;
     private float prevMouseRate;
+    /**
+     * If you have been holding a key before taking off, the keyboard rotator will not immediately start
+     */
+    private boolean keyHeldBeforeFlight = true;
 
     {
         prevSensitivity = 0.0F;
@@ -26,7 +31,21 @@ public class KeyboardRotator {
         prevMouseRate = scale * scale * scale * KeyboardRotator.RATE_ALTERED;
     }
 
-    public void updateTickRotation(@Nonnull GameSettings gameSettings) {
+    public void updateTickRotation(@Nonnull GameSettings gameSettings, boolean elytraFlying) {
+        if (!elytraFlying) {
+            keyHeldBeforeFlight = true;
+            return;
+        }
+        KeyBinding keyBindLeft = gameSettings.keyBindLeft;
+        KeyBinding keyBindRight = gameSettings.keyBindRight;
+        KeyBinding keyBindForward = gameSettings.keyBindForward;
+        KeyBinding keyBindBack = gameSettings.keyBindBack;
+        if (keyHeldBeforeFlight) {
+            keyHeldBeforeFlight = keyBindLeft.isKeyDown() || keyBindRight.isKeyDown() || keyBindForward.isKeyDown() || keyBindBack.isKeyDown();
+            if (keyHeldBeforeFlight) {
+                return;
+            }
+        }
         prevDeltaYaw = deltaYaw;
         prevDeltaPitch = deltaPitch;
         float rate;
@@ -40,17 +59,17 @@ public class KeyboardRotator {
             prevSensitivity = sensitivity;
         }
         int keyForward = 0;
-        if (gameSettings.keyBindForward.isKeyDown()) {
+        if (keyBindForward.isKeyDown()) {
             ++keyForward;
         }
-        if (gameSettings.keyBindBack.isKeyDown()) {
+        if (keyBindBack.isKeyDown()) {
             --keyForward;
         }
         int keyStrafing = 0;
-        if (gameSettings.keyBindRight.isKeyDown()) {
+        if (keyBindRight.isKeyDown()) {
             ++keyStrafing;
         }
-        if (gameSettings.keyBindLeft.isKeyDown()) {
+        if (keyBindLeft.isKeyDown()) {
             --keyStrafing;
         }
         if (keyStrafing != 0 || keyForward != 0) {
