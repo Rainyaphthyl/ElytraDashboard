@@ -34,7 +34,6 @@ public class KeyboardRotator {
     public void updateTickRotation(@Nonnull GameSettings gameSettings, boolean elytraFlying) {
         if (!elytraFlying) {
             keyHeldBeforeFlight = true;
-            return;
         }
         KeyBinding keyBindLeft = gameSettings.keyBindLeft;
         KeyBinding keyBindRight = gameSettings.keyBindRight;
@@ -42,39 +41,39 @@ public class KeyboardRotator {
         KeyBinding keyBindBack = gameSettings.keyBindBack;
         if (keyHeldBeforeFlight) {
             keyHeldBeforeFlight = keyBindLeft.isKeyDown() || keyBindRight.isKeyDown() || keyBindForward.isKeyDown() || keyBindBack.isKeyDown();
-            if (keyHeldBeforeFlight) {
-                return;
+        }
+        boolean checking = elytraFlying && !keyHeldBeforeFlight && References.flightInstrument.getHeight() >= 20.0;
+        if (checking) {
+            prevDeltaYaw = deltaYaw;
+            prevDeltaPitch = deltaPitch;
+            float rate;
+            float sensitivity = gameSettings.mouseSensitivity;
+            if (prevSensitivity == sensitivity) {
+                rate = prevMouseRate;
+            } else {
+                float scale = sensitivity * KeyboardRotator.SCALE_FACTOR + KeyboardRotator.SCALE_OFFSET;
+                rate = scale * scale * scale * KeyboardRotator.RATE_ALTERED;
+                prevMouseRate = rate;
+                prevSensitivity = sensitivity;
             }
-        }
-        prevDeltaYaw = deltaYaw;
-        prevDeltaPitch = deltaPitch;
-        float rate;
-        float sensitivity = gameSettings.mouseSensitivity;
-        if (prevSensitivity == sensitivity) {
-            rate = prevMouseRate;
-        } else {
-            float scale = sensitivity * KeyboardRotator.SCALE_FACTOR + KeyboardRotator.SCALE_OFFSET;
-            rate = scale * scale * scale * KeyboardRotator.RATE_ALTERED;
-            prevMouseRate = rate;
-            prevSensitivity = sensitivity;
-        }
-        int keyForward = 0;
-        if (keyBindForward.isKeyDown()) {
-            ++keyForward;
-        }
-        if (keyBindBack.isKeyDown()) {
-            --keyForward;
-        }
-        int keyStrafing = 0;
-        if (keyBindRight.isKeyDown()) {
-            ++keyStrafing;
-        }
-        if (keyBindLeft.isKeyDown()) {
-            --keyStrafing;
-        }
-        if (keyStrafing != 0 || keyForward != 0) {
-            deltaYaw += (float) keyStrafing * rate;
-            deltaPitch += (float) keyForward * rate;
+            int keyForward = 0;
+            if (keyBindForward.isKeyDown()) {
+                ++keyForward;
+            }
+            if (keyBindBack.isKeyDown()) {
+                --keyForward;
+            }
+            int keyStrafing = 0;
+            if (keyBindRight.isKeyDown()) {
+                ++keyStrafing;
+            }
+            if (keyBindLeft.isKeyDown()) {
+                --keyStrafing;
+            }
+            if (keyStrafing != 0 || keyForward != 0) {
+                deltaYaw += (float) keyStrafing * rate;
+                deltaPitch += (float) keyForward * rate;
+            }
         }
         if (deltaYaw != 0.0F) {
             deltaYaw *= KeyboardRotator.INERTIA;

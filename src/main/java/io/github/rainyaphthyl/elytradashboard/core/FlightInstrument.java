@@ -312,4 +312,8 @@ public class FlightInstrument {
         cumulativePacket.fuelCount.set(0);
         cumulativePacket.fuelError.set(false);
     }
+
+    public double getHeight() {
+        return instantPacket.getHeight();
+    }
 }
