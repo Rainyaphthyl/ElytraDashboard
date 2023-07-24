@@ -4,8 +4,12 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public abstract class AsyncPacket {
-    protected final ReadWriteLock mainLock = new ReentrantReadWriteLock(true);
+public class LockRunner {
+    private final ReadWriteLock mainLock;
+
+    public LockRunner(boolean fair) {
+        mainLock = new ReentrantReadWriteLock(fair);
+    }
 
     /**
      * Lock the read-lock or the write-lock, run the task, and unlock the lock.
@@ -13,7 +17,7 @@ public abstract class AsyncPacket {
      * @param type   {@link EnumRW#READ} or {@link EnumRW#WRITE}
      * @param runner The task
      */
-    public final void runSyncTask(EnumRW type, Runnable runner) {
+    public void runSyncTask(EnumRW type, Runnable runner) {
         if (runner == null) return;
         Lock lock;
         switch (type) {

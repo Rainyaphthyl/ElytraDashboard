@@ -1,13 +1,15 @@
 package io.github.rainyaphthyl.elytradashboard.core;
 
+import io.github.rainyaphthyl.elytradashboard.core.record.CumulativePacket;
 import io.github.rainyaphthyl.elytradashboard.core.record.EnumRW;
-import io.github.rainyaphthyl.elytradashboard.core.record.FireworkPacket;
 import io.github.rainyaphthyl.elytradashboard.core.record.InstantPacket;
+import io.github.rainyaphthyl.elytradashboard.core.record.LockRunner;
 import io.github.rainyaphthyl.elytradashboard.util.GenericHelper;
 import io.github.rainyaphthyl.elytradashboard.util.InfoLineRecord;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGameOver;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.entity.player.EntityPlayer;
@@ -32,15 +34,17 @@ public class FlightInstrument {
      * Seems that it should use the client data...
      */
     public static final boolean USING_SERVER_DATA = false;
+    public static final Integer COLOR_NORMAL = Color.WHITE.getRGB() & 0x90FFFFFF;
+    public static final Integer COLOR_BG = 0x90505050;
+    public static final Integer COLOR_WARNING = Color.YELLOW.getRGB() & 0x90FFFFFF;
+    public static final Integer COLOR_ERROR = Color.RED.getRGB() & 0x90FFFFFF;
     private final InstantPacket instantPacket = new InstantPacket();
-    private final FireworkPacket fireworkPacket = new FireworkPacket();
-    private final TripPacket tripPacket = new TripPacket();
+    private final CumulativePacket cumulativePacket = new CumulativePacket();
     private final AtomicReferenceArray<EntityPlayer> playerCache = new AtomicReferenceArray<>(2);
-    private long initTripTick = 0L;
-    private long tripDuration = 0L;
+    private final LockRunner fireworkLock = new LockRunner(true);
     private boolean duringFlight = false;
 
-    private static void renderInfoLines(@Nonnull Minecraft minecraft, @Nonnull List<Tuple<String, Color>> textList) {
+    private static void renderInfoLines(@Nonnull Minecraft minecraft, @Nonnull List<Tuple<String, Integer>> textList) {
         FontRenderer fontRenderer = minecraft.fontRenderer;
         ScaledResolution resolution = new ScaledResolution(minecraft);
         List<InfoLineRecord> displayedList = new ArrayList<>();
@@ -52,7 +56,7 @@ public class FlightInstrument {
         int totalWidth = 0;
         int totalHeight = 0;
         // check block height of info lines
-        for (Tuple<String, Color> tuple : textList) {
+        for (Tuple<String, Integer> tuple : textList) {
             String text = tuple.getFirst();
             int txtWidth = fontRenderer.getStringWidth(text);
             int txtHeight = fontRenderer.FONT_HEIGHT;
@@ -65,13 +69,14 @@ public class FlightInstrument {
             if (txtWidth > totalWidth) {
                 totalWidth = txtWidth;
             }
-            Color color = tuple.getSecond();
-            displayedList.add(new InfoLineRecord(text, posDeltaX, posDeltaY, color.getRGB(), split));
+            int color = tuple.getSecond();
+            displayedList.add(new InfoLineRecord(text, posDeltaX, posDeltaY, color, split));
             posDeltaY += txtHeight;
         }
         // draw strings
         int posGlobalX = (displayWidth - totalWidth) / 2;
-        int posGlobalY = displayHeight / 3 - totalHeight / 2;
+        int posGlobalY = displayHeight / 100;
+        Gui.drawRect(posGlobalX - 1, posGlobalY - 1, posGlobalX + totalWidth, posGlobalY + totalHeight, COLOR_BG);
         for (InfoLineRecord record : displayedList) {
             int posX = posGlobalX + record.posDeltaX;
             int posY = posGlobalY + record.posDeltaY;
@@ -126,13 +131,13 @@ public class FlightInstrument {
                 if (player == playerSP || player != null && player.isElytraFlying()) {
                     long currTripTick = minecraft.world.getTotalWorldTime();
                     if (!duringFlight) {
-                        tripPacket.setInitPosition(player.posX, player.posY, player.posZ);
-                        initTripTick = currTripTick;
+                        cumulativePacket.setInitPosition(player.posX, player.posY, player.posZ);
+                        cumulativePacket.initTripTick = currTripTick;
                         duringFlight = true;
                     }
-                    tripDuration = currTripTick - initTripTick;
+                    cumulativePacket.tripDuration = currTripTick - cumulativePacket.initTripTick;
                     updateElytraData(player);
-                    tripPacket.updateVelocity(player.posX, player.posY, player.posZ, tripDuration);
+                    cumulativePacket.updateVelocity(player.posX, player.posY, player.posZ);
                     return;
                 }
             }
@@ -158,57 +163,56 @@ public class FlightInstrument {
     private void stopFlight() {
         if (duringFlight) {
             duringFlight = false;
-            fireworkPacket.runSyncTask(EnumRW.WRITE, this::resetFirework);
+            fireworkLock.runSyncTask(EnumRW.WRITE, this::resetFirework);
         }
     }
 
-    public void asyncRecordFirework(byte level) {
-        Runnable task = () -> fireworkPacket.runSyncTask(EnumRW.WRITE, () -> {
-            fireworkPacket.levelMap.compute(level, FlightInstrument::increase);
-            fireworkPacket.fuelCount.addAndGet(level);
-            fireworkPacket.fuelError.compareAndSet(false, level < 0);
+    public void recordFirework(byte level) {
+        fireworkLock.runSyncTask(EnumRW.WRITE, () -> {
+            cumulativePacket.levelMap.compute(level, FlightInstrument::increase);
+            cumulativePacket.fuelCount.addAndGet(level);
+            cumulativePacket.fuelError.compareAndSet(false, level < 0);
         });
-        Thread thread = new Thread(task, "Firework Logger");
-        thread.setDaemon(true);
-        thread.start();
     }
 
     public void render(@Nonnull Minecraft minecraft, boolean inGame) {
         if (inGame && duringFlight) {
             float reducedCollisionDamage = instantPacket.getReducedCollisionDamage();
             String text = String.format("Collision Damage: %.2f / %.2f", instantPacket.getCompleteCollisionDamage(), reducedCollisionDamage);
-            Color color = reducedCollisionDamage >= instantPacket.health ? Color.RED : Color.WHITE;
-            List<Tuple<String, Color>> textList = new ArrayList<>();
+            Integer color = reducedCollisionDamage >= instantPacket.health ? COLOR_WARNING : COLOR_NORMAL;
+            List<Tuple<String, Integer>> textList = new ArrayList<>();
             textList.add(new Tuple<>(text, color));
             float reducedFallingDamage = instantPacket.getReducedFallingDamage();
-            color = reducedFallingDamage >= instantPacket.health ? Color.RED : Color.WHITE;
+            color = reducedFallingDamage >= instantPacket.health ? COLOR_WARNING : COLOR_NORMAL;
             text = String.format("Falling Damage: %.2f / %.2f", instantPacket.getCompleteFallingDamage(), reducedFallingDamage);
             textList.add(new Tuple<>(text, color));
-            textList.add(new Tuple<>("Flight Duration: " + tripDuration, Color.WHITE));
-            AtomicInteger poolInt = new AtomicInteger(0);
-            AtomicReference<Color> poolColor = new AtomicReference<>(null);
-            fireworkPacket.runSyncTask(EnumRW.READ, () -> {
-                poolInt.set(fireworkPacket.fuelCount.get());
-                poolColor.set(fireworkPacket.fuelError.get() ? Color.LIGHT_GRAY : Color.WHITE);
+            textList.add(new Tuple<>("Flight Duration: " + cumulativePacket.tripDuration, COLOR_NORMAL));
+            AtomicInteger poolNum = new AtomicInteger(0);
+            AtomicReference<Integer> poolColor = new AtomicReference<>(0);
+            fireworkLock.runSyncTask(EnumRW.READ, () -> {
+                poolNum.set(cumulativePacket.fuelCount.get());
+                poolColor.set(cumulativePacket.fuelError.get() ? COLOR_ERROR : COLOR_NORMAL);
             });
-            textList.add(new Tuple<>("Firework Fuels: " + poolInt.get(), poolColor.get()));
-            double displacement = tripPacket.getHorizonDisplacement();
-            double velocity = tripPacket.getHorizonVelocity();
-            double distance = tripPacket.getHorizonDistance();
-            double speed = tripPacket.getHorizonSpeed();
-            double fuelEfficiency = (double) poolInt.get() / distance;
-            textList.add(new Tuple<>(String.format("Avg Fuel Efficiency: %.2f GPD/km", fuelEfficiency * 1000), Color.WHITE));
-            textList.add(new Tuple<>(String.format("Avg XZ Velocity: %.2f m/s", velocity * 20.0), Color.WHITE));
-            textList.add(new Tuple<>(String.format("Total XZ Displacement: %.0f m", displacement), Color.WHITE));
-            textList.add(new Tuple<>(String.format("Avg XZ Speed: %.2f m/s", speed * 20.0), Color.WHITE));
-            textList.add(new Tuple<>(String.format("Total XZ Distance: %.0f m", distance), Color.WHITE));
+            textList.add(new Tuple<>("Firework Fuels: " + poolNum.get(), poolColor.get()));
+            double displacement = cumulativePacket.getTotalDisplacement();
+            double velocity = cumulativePacket.getTotalVelocity();
+            double distance = cumulativePacket.getHorizonDistance();
+            double speed = cumulativePacket.getHorizonSpeed();
+            double fuelEffTotal = (double) poolNum.get() / displacement;
+            double fuelEffHorizon = (double) poolNum.get() / distance;
+            textList.add(new Tuple<>(String.format("Avg XYZ Fuel Efficiency: %.2f G/km", fuelEffTotal * 1000), poolColor.get()));
+            textList.add(new Tuple<>(String.format("Avg XYZ Velocity: %.2f m/s", velocity * 20.0), COLOR_NORMAL));
+            textList.add(new Tuple<>(String.format("Total XYZ Displacement: %.0f m", displacement), COLOR_NORMAL));
+            textList.add(new Tuple<>(String.format("Avg XZ Fuel Efficiency: %.2f G/km", fuelEffHorizon * 1000), poolColor.get()));
+            textList.add(new Tuple<>(String.format("Avg XZ Speed: %.2f m/s", speed * 20.0), COLOR_NORMAL));
+            textList.add(new Tuple<>(String.format("Total XZ Distance: %.0f m", distance), COLOR_NORMAL));
             renderInfoLines(minecraft, textList);
         }
     }
 
     private void resetFirework() {
-        fireworkPacket.levelMap.clear();
-        fireworkPacket.fuelCount.set(0);
-        fireworkPacket.fuelError.set(false);
+        cumulativePacket.levelMap.clear();
+        cumulativePacket.fuelCount.set(0);
+        cumulativePacket.fuelError.set(false);
     }
 }
