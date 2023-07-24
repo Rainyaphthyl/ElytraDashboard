@@ -23,22 +23,24 @@ public class MixinItemFirework extends Item {
     @Redirect(method = "onItemRightClick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/EntityPlayer;getHeldItem(Lnet/minecraft/util/EnumHand;)Lnet/minecraft/item/ItemStack;", ordinal = 0))
     private ItemStack getItemStackTags(@Nonnull EntityPlayer playerIn, EnumHand enumHand) {
         ItemStack itemStack = playerIn.getHeldItem(enumHand);
-        Minecraft client = Minecraft.getMinecraft();
-        EntityPlayerSP playerHost = client.player;
-        boolean accessible;
-        if (client.isSingleplayer()) {
-            if (playerIn instanceof EntityPlayerMP && playerHost != null) {
-                accessible = GenericHelper.equalsUnique(playerIn, playerHost);
+        if (playerIn.isElytraFlying()) {
+            Minecraft client = Minecraft.getMinecraft();
+            EntityPlayerSP playerHost = client.player;
+            boolean accessible;
+            if (client.isSingleplayer()) {
+                if (playerIn instanceof EntityPlayerMP && playerHost != null) {
+                    accessible = GenericHelper.equalsUnique(playerIn, playerHost);
+                } else {
+                    accessible = false;
+                }
             } else {
-                accessible = false;
+                accessible = playerIn instanceof EntityPlayerSP;
             }
-        } else {
-            accessible = playerIn instanceof EntityPlayerSP;
-        }
-        if (accessible) {
-            NBTTagCompound compound = itemStack.getSubCompound("Fireworks");
-            byte level = compound == null ? (byte) 0 : compound.getByte("Flight");
-            References.flightInstrument.asyncRecordFirework(level);
+            if (accessible) {
+                NBTTagCompound compound = itemStack.getSubCompound("Fireworks");
+                byte level = compound == null ? (byte) 0 : compound.getByte("Flight");
+                References.flightInstrument.recordFirework(level);
+            }
         }
         return itemStack;
     }

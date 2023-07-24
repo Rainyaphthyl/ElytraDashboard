@@ -36,6 +36,10 @@ public class ModSettings implements Exposable {
     @SerializedName("enable-dashboard")
     public boolean dashboardEnabled = true;
 
+    @Expose
+    @SerializedName("enable-warning")
+    public boolean warningEnabled = true;
+
     public ModSettings() {
     }
 

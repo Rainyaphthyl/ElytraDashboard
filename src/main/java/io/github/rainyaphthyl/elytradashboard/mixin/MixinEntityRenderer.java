@@ -37,7 +37,7 @@ public class MixinEntityRenderer {
             References.keyboardRotator.updateTickRotation(gameSettings, flying);
         }
         profiler.endStartSection("tickInstrument");
-        if (ModSettings.INSTANCE.dashboardEnabled) {
+        if (ModSettings.INSTANCE.dashboardEnabled || ModSettings.INSTANCE.warningEnabled) {
             Entity renderViewEntity = mc.getRenderViewEntity();
             boolean inGame = renderViewEntity != null && renderViewEntity.world != null;
             References.flightInstrument.tick(mc, inGame);
@@ -75,11 +75,28 @@ public class MixinEntityRenderer {
     private void onRenderGUI(float partialTicks, long nanoTime, CallbackInfo ci) {
         Profiler profiler = mc.profiler;
         profiler.startSection("renderInstrument");
+        boolean checked = false;
+        boolean inGame = false;
         if (ModSettings.INSTANCE.dashboardEnabled) {
-            Entity renderViewEntity = mc.getRenderViewEntity();
-            boolean inGame = renderViewEntity != null && renderViewEntity.world != null;
-            References.flightInstrument.render(mc, inGame);
+            inGame = elytraDashboard$checkInGame();
+            checked = true;
+            References.flightInstrument.renderDashboard(mc, inGame);
+        }
+        if (ModSettings.INSTANCE.warningEnabled) {
+            if (!checked) {
+                inGame = elytraDashboard$checkInGame();
+                //checked = true;
+            }
+            References.flightInstrument.renderWarning(mc, inGame);
         }
         profiler.endSection();
+    }
+
+    @Unique
+    private boolean elytraDashboard$checkInGame() {
+        boolean inGame;
+        Entity renderViewEntity = mc.getRenderViewEntity();
+        inGame = renderViewEntity != null && renderViewEntity.world != null;
+        return inGame;
     }
 }
