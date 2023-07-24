@@ -1,11 +1,8 @@
 package io.github.rainyaphthyl.elytradashboard.mixin;
 
 import io.github.rainyaphthyl.elytradashboard.core.References;
-import io.github.rainyaphthyl.elytradashboard.util.GenericHelper;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemFirework;
 import net.minecraft.item.ItemStack;
@@ -24,19 +21,10 @@ public class MixinItemFirework extends Item {
     private ItemStack getItemStackTags(@Nonnull EntityPlayer playerIn, EnumHand enumHand) {
         ItemStack itemStack = playerIn.getHeldItem(enumHand);
         if (playerIn.isElytraFlying()) {
-            Minecraft client = Minecraft.getMinecraft();
-            EntityPlayerSP playerHost = client.player;
-            boolean accessible;
-            if (client.isSingleplayer()) {
-                if (playerIn instanceof EntityPlayerMP && playerHost != null) {
-                    accessible = GenericHelper.equalsUnique(playerIn, playerHost);
-                } else {
-                    accessible = false;
-                }
-            } else {
-                accessible = playerIn instanceof EntityPlayerSP;
-            }
-            if (accessible) {
+            boolean clientAccess = playerIn instanceof EntityPlayerSP;
+            // Server-side query can fail in single-player, due to unknown effects from other mods
+            // Do not check the server
+            if (clientAccess) {
                 NBTTagCompound compound = itemStack.getSubCompound("Fireworks");
                 byte level = compound == null ? (byte) 0 : compound.getByte("Flight");
                 References.flightInstrument.recordFirework(level);

@@ -250,11 +250,14 @@ public class FlightInstrument {
     }
 
     public void recordFirework(byte level) {
-        fireworkLock.runSyncTask(EnumRW.WRITE, () -> {
+        Runnable task = () -> fireworkLock.runSyncTask(EnumRW.WRITE, () -> {
             cumulativePacket.levelMap.compute(level, FlightInstrument::increase);
             cumulativePacket.fuelCount.addAndGet(level);
             cumulativePacket.fuelError.compareAndSet(false, level < 0);
         });
+        Thread thread = new Thread(task, "Firework Logger");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     public void renderDashboard(@Nonnull Minecraft minecraft, boolean inGame) {
