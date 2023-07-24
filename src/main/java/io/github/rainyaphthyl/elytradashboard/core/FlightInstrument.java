@@ -56,15 +56,13 @@ public class FlightInstrument {
     private String currWarningTitle = null;
     private boolean duringFlight = false;
 
-    private static void renderInfoLines(@Nonnull Minecraft minecraft, @Nonnull List<Tuple<String, Integer>> textList) {
+    private static void renderInfoLines(@Nonnull Minecraft minecraft, @Nonnull List<Tuple<String, Integer>> textList, boolean transparent) {
         FontRenderer fontRenderer = minecraft.fontRenderer;
         ScaledResolution resolution = new ScaledResolution(minecraft);
         List<InfoLineRecord> displayedList = new ArrayList<>();
         final int displayWidth = resolution.getScaledWidth();
         final int displayHeight = resolution.getScaledHeight();
         final int maxWidth = (int) (displayWidth * MAX_WIDTH_RATE);
-        int posDeltaX = 0;
-        int posDeltaY = 0;
         int totalWidth = 0;
         int totalHeight = 0;
         // check block height of info lines
@@ -82,22 +80,34 @@ public class FlightInstrument {
                 totalWidth = txtWidth;
             }
             int color = tuple.getSecond();
-            displayedList.add(new InfoLineRecord(text, posDeltaX, posDeltaY, color, split));
-            posDeltaY += txtHeight;
+            displayedList.add(new InfoLineRecord(text, txtWidth, txtHeight, color, split));
         }
         // draw strings
-        int posGlobalX = (displayWidth - totalWidth) / 2;
-        int posGlobalY = displayHeight / 100;
-        Gui.drawRect(posGlobalX - 1, posGlobalY - 1, posGlobalX + totalWidth, posGlobalY + totalHeight, COLOR_BG);
-        for (InfoLineRecord record : displayedList) {
-            int posX = posGlobalX + record.posDeltaX;
-            int posY = posGlobalY + record.posDeltaY;
-            if (record.split) {
-                fontRenderer.drawSplitString(record.text, posX, posY, maxWidth, record.color);
-            } else {
-                fontRenderer.drawString(record.text, posX, posY, record.color);
-            }
+        int posGlobalX = displayWidth * 127 / 128 - totalWidth;
+        int posGlobalY = displayHeight / 128;
+        GlStateManager.pushMatrix();
+        int actualColor = COLOR_BG;
+        if (transparent) {
+            int rgb = actualColor & 0x00FFFFFF;
+            actualColor = rgb | 0x40000000;
         }
+        Gui.drawRect(posGlobalX - 1, posGlobalY - 1, posGlobalX + totalWidth, posGlobalY + totalHeight, actualColor);
+        int renderHeight = 0;
+        for (InfoLineRecord record : displayedList) {
+            int posY = posGlobalY + renderHeight;
+            actualColor = record.color;
+            if (transparent) {
+                int rgb = actualColor & 0x00FFFFFF;
+                actualColor = rgb | 0x40000000;
+            }
+            if (record.split) {
+                fontRenderer.drawSplitString(record.text, posGlobalX, posY, maxWidth, actualColor);
+            } else {
+                fontRenderer.drawString(record.text, posGlobalX, posY, actualColor);
+            }
+            renderHeight += record.txtHeight;
+        }
+        GlStateManager.popMatrix();
     }
 
     @Nonnull
@@ -284,7 +294,8 @@ public class FlightInstrument {
             textList.add(new Tuple<>(String.format("Avg XZ Fuel Efficiency: %.2f g/km", fuelEffHorizon * 1000), poolColor.get()));
             textList.add(new Tuple<>(String.format("Avg XZ Speed: %.2f m/s", speed * 20.0), COLOR_NORMAL));
             textList.add(new Tuple<>(String.format("Total XZ Distance: %.0f m", distance), COLOR_NORMAL));
-            renderInfoLines(minecraft, textList);
+            boolean lowAltitude = altitude < minecraft.world.getHeight();
+            renderInfoLines(minecraft, textList, lowAltitude);
         }
     }
 
