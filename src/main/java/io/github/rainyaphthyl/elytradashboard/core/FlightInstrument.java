@@ -6,6 +6,7 @@ import io.github.rainyaphthyl.elytradashboard.core.record.InstantPacket;
 import io.github.rainyaphthyl.elytradashboard.core.record.LockRunner;
 import io.github.rainyaphthyl.elytradashboard.util.GenericHelper;
 import io.github.rainyaphthyl.elytradashboard.util.InfoLineRecord;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
@@ -17,7 +18,10 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerList;
 import net.minecraft.util.Tuple;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 import java.awt.*;
@@ -138,11 +142,50 @@ public class FlightInstrument {
                     cumulativePacket.tripDuration = currTripTick - cumulativePacket.initTripTick;
                     updateElytraData(player);
                     cumulativePacket.updateVelocity(player.posX, player.posY, player.posZ);
+                    updateHeight(player);
                     return;
                 }
             }
         }
         stopFlight();
+    }
+
+    private void updateHeight(@Nonnull EntityPlayer player) {
+        double altitude = player.posY;
+        double groundLevel = -64.0;
+        World world = player.getEntityWorld();
+        BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos(
+                MathHelper.floor(player.posX),
+                Math.min(MathHelper.floor(player.posY), world.getHeight()),
+                MathHelper.floor(player.posZ)
+        );
+        AxisAlignedBB playerBox = player.getEntityBoundingBox();
+        boolean flag = true;
+        for (int y = blockPos.getY(); flag && y > 0; --y) {
+            int blockMinX = MathHelper.floor(playerBox.minX);
+            int blockMinZ = MathHelper.floor(playerBox.minZ);
+            int blockMaxX = MathHelper.floor(playerBox.maxX);
+            int blockMaxZ = MathHelper.floor(playerBox.maxZ);
+            List<AxisAlignedBB> bbList = new ArrayList<>();
+            AxisAlignedBB maskBox = new AxisAlignedBB(
+                    playerBox.minX, y, playerBox.minZ, playerBox.maxX, y + 1, playerBox.maxZ
+            );
+            for (int x = blockMinX; x <= blockMaxX; ++x) {
+                for (int z = blockMinZ; z <= blockMaxZ; ++z) {
+                    blockPos.setPos(x, y, z);
+                    IBlockState blockState = world.getBlockState(blockPos);
+                    blockState.addCollisionBoxToList(world, blockPos, maskBox, bbList, null, false);
+                }
+            }
+            for (AxisAlignedBB boundingBox : bbList) {
+                double tempY = boundingBox.maxY;
+                if (tempY > groundLevel) {
+                    groundLevel = tempY;
+                    flag = false;
+                }
+            }
+        }
+        instantPacket.updateHeight(altitude, groundLevel);
     }
 
     private void updateElytraData(@Nonnull EntityPlayer player) {
@@ -186,6 +229,12 @@ public class FlightInstrument {
             color = reducedFallingDamage >= instantPacket.health ? COLOR_WARNING : COLOR_NORMAL;
             text = String.format("Falling Damage: %.2f / %.2f", instantPacket.getCompleteFallingDamage(), reducedFallingDamage);
             textList.add(new Tuple<>(text, color));
+            double altitude = instantPacket.getAltitude();
+            double height = instantPacket.getHeight();
+            text = String.format("Altitude: %.2f (%.2f to %.2f)", altitude, height, instantPacket.getGroundLevel());
+            color = height < 100.0 ? COLOR_WARNING : COLOR_NORMAL;
+            textList.add(new Tuple<>(text, color));
+            textList.add(new Tuple<>("----------------", COLOR_NORMAL));
             textList.add(new Tuple<>("Flight Duration: " + cumulativePacket.tripDuration, COLOR_NORMAL));
             AtomicInteger poolNum = new AtomicInteger(0);
             AtomicReference<Integer> poolColor = new AtomicReference<>(0);

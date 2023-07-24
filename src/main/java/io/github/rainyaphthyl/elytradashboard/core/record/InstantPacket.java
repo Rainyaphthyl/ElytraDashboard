@@ -8,6 +8,7 @@ import net.minecraft.util.CombatRules;
 import net.minecraft.util.DamageSource;
 
 public class InstantPacket {
+    public float health = 0.0F;
     /**
      * The raw value of {@link DamageSource#FLY_INTO_WALL}
      */
@@ -24,7 +25,9 @@ public class InstantPacket {
      * The value of {@link DamageSource#FALL} reduced <b>only</b> by armors (with enchantments). Requires {@link InstantPacket#applyReducedDamages} invocation.
      */
     private float reducedFallingDamage = 0.0F;
-    public float health = 0.0F;
+    private double altitude = 0.0;
+    private double groundLevel = 0.0;
+    private double height = 0.0;
 
     public static float getReducedDamage(float damage, int modifier) {
         if (damage <= 0.0F) {
@@ -62,6 +65,12 @@ public class InstantPacket {
         reducedFallingDamage = getReducedDamage(completeFallingDamage, modifierFalling);
     }
 
+    public void updateHeight(double altitudeIn, double groundLevelIn) {
+        altitude = altitudeIn;
+        groundLevel = groundLevelIn;
+        height = altitudeIn - groundLevelIn;
+    }
+
     /**
      * The raw value of {@link DamageSource#FLY_INTO_WALL}
      */
@@ -96,5 +105,17 @@ public class InstantPacket {
      */
     public float getReducedFallingDamage() {
         return reducedFallingDamage;
+    }
+
+    public double getGroundLevel() {
+        return groundLevel;
+    }
+
+    public double getHeight() {
+        return height;
+    }
+
+    public double getAltitude() {
+        return altitude;
     }
 }
