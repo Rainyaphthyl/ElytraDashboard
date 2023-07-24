@@ -18,6 +18,8 @@ This is a client-side mod for Minecraft 1.12.2, powered by liteloader.
 
 ### Features and Functions
 
+- [ChangeLog](ChangeLog.md)
+
 _Work in progress_
 
 ## Development
