@@ -29,19 +29,26 @@ public class ModConfigPanel extends AbstractConfigPanel {
         tempSettings.syncFrom(mainSettings);
         int posY = 0;
         int id = 0;
-        GuiCheckbox checkbox = addControl(new GuiCheckbox(id, 0, posY, I18n.format("elytraDashboard.config.name.keyboardElytra")),
+        GuiCheckbox checkboxKeyElytra = addControl(new GuiCheckbox(id, 0, posY, I18n.format("elytraDashboard.config.name.keyboardElytra")),
                 control -> {
                     control.checked = !control.checked;
                     tempSettings.keyboardElytraEnabled = control.checked;
                 });
-        checkbox.checked = tempSettings.keyboardElytraEnabled;
+        checkboxKeyElytra.checked = tempSettings.keyboardElytraEnabled;
         posY += CHECKBOX_HEIGHT;
-        checkbox = addControl(new GuiCheckbox(++id, 0, posY, I18n.format("elytraDashboard.config.name.dashboard")),
+        GuiCheckbox checkboxDashboard = addControl(new GuiCheckbox(++id, 0, posY, I18n.format("elytraDashboard.config.name.dashboard")),
                 control -> {
                     control.checked = !control.checked;
                     tempSettings.dashboardEnabled = control.checked;
                 });
-        checkbox.checked = tempSettings.dashboardEnabled;
+        checkboxDashboard.checked = tempSettings.dashboardEnabled;
+        posY += CHECKBOX_HEIGHT;
+        GuiCheckbox checkboxAlarm = addControl(new GuiCheckbox(++id, 0, posY, I18n.format("elytraDashboard.config.name.warning")),
+                control -> {
+                    control.checked = !control.checked;
+                    tempSettings.warningEnabled = control.checked;
+                });
+        checkboxAlarm.checked = tempSettings.warningEnabled;
     }
 
     /**

@@ -1,5 +1,6 @@
 package io.github.rainyaphthyl.elytradashboard.core;
 
+import io.github.rainyaphthyl.elytradashboard.config.ModSettings;
 import io.github.rainyaphthyl.elytradashboard.core.record.CumulativePacket;
 import io.github.rainyaphthyl.elytradashboard.core.record.EnumRW;
 import io.github.rainyaphthyl.elytradashboard.core.record.InstantPacket;
@@ -13,10 +14,16 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGameOver;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.play.server.SPacketSoundEffect;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerList;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -46,6 +53,7 @@ public class FlightInstrument {
     private final CumulativePacket cumulativePacket = new CumulativePacket();
     private final AtomicReferenceArray<EntityPlayer> playerCache = new AtomicReferenceArray<>(2);
     private final LockRunner fireworkLock = new LockRunner(true);
+    private String currWarningTitle = null;
     private boolean duringFlight = false;
 
     private static void renderInfoLines(@Nonnull Minecraft minecraft, @Nonnull List<Tuple<String, Integer>> textList) {
@@ -143,11 +151,32 @@ public class FlightInstrument {
                     updateElytraData(player);
                     cumulativePacket.updateVelocity(player.posX, player.posY, player.posZ);
                     updateHeight(player);
+                    if (ModSettings.INSTANCE.warningEnabled) {
+                        if (instantPacket.getHeight() < 100.0 && instantPacket.getReducedFallingDamage() > instantPacket.health) {
+                            // terrain, pull up
+                            checkWarning(minecraft, player);
+                            currWarningTitle = "PULL UP!";
+                        } else {
+                            currWarningTitle = null;
+                        }
+                    }
                     return;
                 }
             }
         }
         stopFlight();
+    }
+
+    private void checkWarning(@Nonnull Minecraft minecraft, @Nonnull EntityPlayer player) {
+        minecraft.addScheduledTask(() -> {
+            NetHandlerPlayClient connection = minecraft.getConnection();
+            if (connection != null) {
+                SoundEvent soundEvent = SoundEvent.REGISTRY.getObject(new ResourceLocation("block.note.bell"));
+                if (soundEvent != null) {
+                    connection.handleSoundEffect(new SPacketSoundEffect(soundEvent, SoundCategory.VOICE, player.posX, player.posY, player.posZ, 4.0F, 0.5F));
+                }
+            }
+        });
     }
 
     private void updateHeight(@Nonnull EntityPlayer player) {
@@ -218,7 +247,7 @@ public class FlightInstrument {
         });
     }
 
-    public void render(@Nonnull Minecraft minecraft, boolean inGame) {
+    public void renderDashboard(@Nonnull Minecraft minecraft, boolean inGame) {
         if (inGame && duringFlight) {
             float reducedCollisionDamage = instantPacket.getReducedCollisionDamage();
             String text = String.format("Collision Damage: %.2f / %.2f", instantPacket.getCompleteCollisionDamage(), reducedCollisionDamage);
@@ -249,13 +278,32 @@ public class FlightInstrument {
             double speed = cumulativePacket.getHorizonSpeed();
             double fuelEffTotal = (double) poolNum.get() / displacement;
             double fuelEffHorizon = (double) poolNum.get() / distance;
-            textList.add(new Tuple<>(String.format("Avg XYZ Fuel Efficiency: %.2f G/km", fuelEffTotal * 1000), poolColor.get()));
+            textList.add(new Tuple<>(String.format("Avg XYZ Fuel Efficiency: %.2f g/km", fuelEffTotal * 1000), poolColor.get()));
             textList.add(new Tuple<>(String.format("Avg XYZ Velocity: %.2f m/s", velocity * 20.0), COLOR_NORMAL));
             textList.add(new Tuple<>(String.format("Total XYZ Displacement: %.0f m", displacement), COLOR_NORMAL));
-            textList.add(new Tuple<>(String.format("Avg XZ Fuel Efficiency: %.2f G/km", fuelEffHorizon * 1000), poolColor.get()));
+            textList.add(new Tuple<>(String.format("Avg XZ Fuel Efficiency: %.2f g/km", fuelEffHorizon * 1000), poolColor.get()));
             textList.add(new Tuple<>(String.format("Avg XZ Speed: %.2f m/s", speed * 20.0), COLOR_NORMAL));
             textList.add(new Tuple<>(String.format("Total XZ Distance: %.0f m", distance), COLOR_NORMAL));
             renderInfoLines(minecraft, textList);
+        }
+    }
+
+    public void renderWarning(@Nonnull Minecraft minecraft, boolean inGame) {
+        if (inGame && duringFlight) {
+            if (currWarningTitle != null) {
+                int halfWidth = minecraft.fontRenderer.getStringWidth(currWarningTitle) / 2;
+                int halfHeight = minecraft.fontRenderer.FONT_HEIGHT / 2;
+                FontRenderer fontRenderer = minecraft.fontRenderer;
+                GlStateManager.pushMatrix();
+                ScaledResolution resolution = new ScaledResolution(minecraft);
+                int rangeWidth = resolution.getScaledWidth() >> 1;
+                int rangeHeight = resolution.getScaledHeight() >> 1;
+                GlStateManager.translate((float) rangeWidth, (float) rangeHeight, 0.0F);
+                GlStateManager.scale(4.0F, 4.0F, 4.0F);
+                Gui.drawRect(-rangeWidth, -halfHeight - 1, rangeWidth, halfHeight, 0x40FF0000);
+                fontRenderer.drawString(currWarningTitle, -halfWidth, -halfHeight, 0xFFFFFF00);
+                GlStateManager.popMatrix();
+            }
         }
     }
 

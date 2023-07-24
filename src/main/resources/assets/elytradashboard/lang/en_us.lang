@@ -1,4 +1,5 @@
 elytraDashboard.config.title=Configuration of Elytra Dashboard
 elytraDashboard.config.name.keyboardElytra=Enable Keyboard Elytra
 elytraDashboard.config.name.dashboard=Enable the Elytra Dashboard
+elytraDashboard.config.name.warning=Enable Flight Warning System
 elytraDashboard.config.option.enabled=Enabled
