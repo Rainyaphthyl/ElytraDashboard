@@ -5,11 +5,15 @@ import com.mumfrey.liteloader.core.LiteLoader;
 import com.mumfrey.liteloader.modconfig.AbstractConfigPanel;
 import com.mumfrey.liteloader.modconfig.ConfigPanelHost;
 import io.github.rainyaphthyl.elytradashboard.LiteModElytraDashboard;
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 
+import java.util.Random;
+
 public class ModConfigPanel extends AbstractConfigPanel {
     private static final int CHECKBOX_HEIGHT = 12;
+    private static final int BUTTON_HEIGHT = 20;
     private final ModSettings tempSettings = new ModSettings(ModSettings.INSTANCE);
     private ModSettings mainSettings = null;
 
@@ -35,20 +39,22 @@ public class ModConfigPanel extends AbstractConfigPanel {
                     tempSettings.keyboardElytraEnabled = control.checked;
                 });
         checkboxKeyElytra.checked = tempSettings.keyboardElytraEnabled;
-        posY += CHECKBOX_HEIGHT;
+        posY += BUTTON_HEIGHT;
         GuiCheckbox checkboxDashboard = addControl(new GuiCheckbox(++id, 0, posY, I18n.format("elytraDashboard.config.name.dashboard")),
                 control -> {
                     control.checked = !control.checked;
                     tempSettings.dashboardEnabled = control.checked;
                 });
         checkboxDashboard.checked = tempSettings.dashboardEnabled;
-        posY += CHECKBOX_HEIGHT;
+        posY += BUTTON_HEIGHT;
         GuiCheckbox checkboxAlarm = addControl(new GuiCheckbox(++id, 0, posY, I18n.format("elytraDashboard.config.name.warning")),
                 control -> {
                     control.checked = !control.checked;
                     tempSettings.warningEnabled = control.checked;
                 });
         checkboxAlarm.checked = tempSettings.warningEnabled;
+        posY += BUTTON_HEIGHT;
+        GuiButton buttonTest = addControl(new GuiButton(++id, 0, posY, "Button Test"), control -> control.displayString = String.valueOf((new Random()).nextLong()));
     }
 
     /**

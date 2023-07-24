@@ -83,7 +83,7 @@ public class FlightInstrument {
             displayedList.add(new InfoLineRecord(text, txtWidth, txtHeight, color, split));
         }
         // draw strings
-        int posGlobalX = displayWidth * 127 / 128 - totalWidth;
+        int posGlobalX = (displayWidth - totalWidth) / 2;
         int posGlobalY = displayHeight / 128;
         GlStateManager.pushMatrix();
         int actualColor = COLOR_BG;
