@@ -1,5 +1,10 @@
 elytraDashboard.config.title=Configuration of Elytra Dashboard
 elytraDashboard.config.name.keyboardElytra=Enable Keyboard Elytra
 elytraDashboard.config.name.dashboard=Enable the Elytra Dashboard
+elytraDashboard.config.name.dashboardPosX=Dashboard Horizontal Position
 elytraDashboard.config.name.warning=Enable Flight Warning System
-elytraDashboard.config.option.enabled=Enabled
+elytraDashboard.config.option.left=Left
+elytraDashboard.config.option.right=Right
+elytraDashboard.config.option.mid=Middle
+elytraDashboard.config.option.top=Top
+elytraDashboard.config.option.bottom=Bottom

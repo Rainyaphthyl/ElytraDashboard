@@ -31,11 +31,12 @@ public class ModSettings implements Exposable {
     @Expose
     @SerializedName("enable-keyboard-elytra")
     public boolean keyboardElytraEnabled = false;
-
     @Expose
     @SerializedName("enable-dashboard")
     public boolean dashboardEnabled = true;
-
+    @Expose
+    @SerializedName("dashboard-horizontal-position")
+    public EnumPosX dashboardPosX = EnumPosX.MID;
     @Expose
     @SerializedName("enable-warning")
     public boolean warningEnabled = true;
