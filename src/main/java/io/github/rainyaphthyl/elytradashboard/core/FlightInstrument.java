@@ -61,7 +61,7 @@ public class FlightInstrument {
         ScaledResolution resolution = new ScaledResolution(minecraft);
         List<InfoLineRecord> displayedList = new ArrayList<>();
         final int displayWidth = resolution.getScaledWidth();
-        final int displayHeight = resolution.getScaledHeight();
+        //final int displayHeight = resolution.getScaledHeight();
         final int maxWidth = (int) (displayWidth * MAX_WIDTH_RATE);
         int totalWidth = 0;
         int totalHeight = 0;
@@ -83,8 +83,19 @@ public class FlightInstrument {
             displayedList.add(new InfoLineRecord(text, txtWidth, txtHeight, color, split));
         }
         // draw strings
-        int posGlobalX = displayWidth * 127 / 128 - totalWidth;
-        int posGlobalY = displayHeight / 128;
+        int posGlobalX;
+        final int posGlobalY = 1;
+        switch (ModSettings.INSTANCE.dashboardPosX) {
+            case LEFT:
+                posGlobalX = 1;
+                break;
+            case RIGHT:
+                posGlobalX = displayWidth - totalWidth;
+                break;
+            case MID:
+            default:
+                posGlobalX = (displayWidth - totalWidth) / 2;
+        }
         GlStateManager.pushMatrix();
         int actualColor = COLOR_BG;
         if (transparent) {
