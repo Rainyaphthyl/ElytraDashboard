@@ -1,4 +1,4 @@
-# Elytra Dashboard 0.2.2
+# Elytra Dashboard 0.2.3-alpha.0
 
 This is a **pre-release** version.
 
