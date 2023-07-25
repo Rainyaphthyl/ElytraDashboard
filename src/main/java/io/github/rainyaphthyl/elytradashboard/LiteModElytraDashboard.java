@@ -11,9 +11,10 @@ import net.minecraft.client.Minecraft;
 
 import java.io.File;
 
+@SuppressWarnings("unused")
 public class LiteModElytraDashboard implements Configurable, InitCompleteListener {
     public static final String NAME = "Elytra Dashboard";
-    public static final String VERSION = "0.2.3-alpha.0";
+    public static final String VERSION = "0.2.3-alpha.1";
     private static ModVersion versionObj = null;
 
     public static ModVersion getVersionObj() {
