@@ -18,7 +18,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 @ExposableOptions(strategy = ConfigStrategy.Unversioned, filename = ModSettings.FILE_NAME)
-public class ModSettings implements Exposable {
+public final class ModSettings implements Exposable {
     public static final ModSettings INSTANCE = new ModSettings();
     public static final String FILE_NAME = "elytradashboard.json";
     public static final String BACKUP_POSTFIX = ".bak";
@@ -67,7 +67,6 @@ public class ModSettings implements Exposable {
                 if (protectRequiring) {
                     // Protect the backup if the config is missing
                     Date dateObj = new Date();
-                    //noinspection SpellCheckingInspection
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS.ZZZZ", Locale.CANADA_FRENCH);
                     String dateTxt = dateFormat.format(dateObj);
                     String archiveName = FILE_NAME + "." + dateTxt + BACKUP_POSTFIX;
