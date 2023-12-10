@@ -169,11 +169,11 @@ public class FlightInstrument {
                         duringFlight = true;
                     }
                     cumulativePacket.tripDuration = currTripTick - cumulativePacket.initTripTick;
+                    updateHeight(player);
                     updateElytraData(player);
                     cumulativePacket.updateVelocity(player.posX, player.posY, player.posZ);
-                    updateHeight(player);
                     if (ModSettings.INSTANCE.warningEnabled) {
-                        if (instantPacket.getHeight() < 100.0 && instantPacket.getReducedFallingDamage() > instantPacket.health) {
+                        if (instantPacket.getHeight() < 100.0 && instantPacket.getReducedPotentialCrash() > instantPacket.health) {
                             // terrain, pull up
                             checkWarning(minecraft, player);
                             currWarningTitle = "PULL UP!";
@@ -244,10 +244,13 @@ public class FlightInstrument {
         double motionHorizon = Math.sqrt(motionX * motionX + motionZ * motionZ);
         instantPacket.setCompleteCollisionDamage((float) (motionHorizon * 10.0 - 3.0));
         float fallDistance = player.fallDistance;
-        if (fallDistance > 0.0F) {
-            instantPacket.setCompleteFallingDamage((float) MathHelper.ceil(fallDistance - 3.0F));
+        float currFallDamage = fallDistance - 3.0F;
+        if (currFallDamage >= 0.0F) {
+            instantPacket.setCompleteFallingDamage((float) MathHelper.ceil(currFallDamage));
+            instantPacket.setCompletePotentialCrash((float) MathHelper.ceil(currFallDamage + (float) getHeight()));
         } else {
             instantPacket.setCompleteFallingDamage(0.0F);
+            instantPacket.setCompletePotentialCrash(0.0F);
         }
         instantPacket.applyReducedDamages(player.getArmorInventoryList());
         instantPacket.health = player.getHealth();
@@ -286,6 +289,10 @@ public class FlightInstrument {
             double height = instantPacket.getHeight();
             text = String.format("Altitude: %.2f (%.2f to %.2f)", altitude, height, instantPacket.getGroundLevel());
             color = height < 100.0 ? COLOR_WARNING : COLOR_NORMAL;
+            textList.add(new Tuple<>(text, color));
+            float reducedPotentialCrash = instantPacket.getReducedPotentialCrash();
+            color = reducedPotentialCrash >= instantPacket.health ? COLOR_WARNING : COLOR_NORMAL;
+            text = String.format("Potential Crash: %.2f / %.2f", instantPacket.getCompletePotentialCrash(), reducedPotentialCrash);
             textList.add(new Tuple<>(text, color));
             textList.add(new Tuple<>("----------------", COLOR_NORMAL));
             textList.add(new Tuple<>("Flight Duration: " + cumulativePacket.tripDuration, COLOR_NORMAL));
