@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import javax.annotation.Nonnull;
 
 @Mixin(ItemFirework.class)
-public class MixinItemFirework extends Item {
+public abstract class MixinItemFirework extends Item {
     @Nonnull
     @Redirect(method = "onItemRightClick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/EntityPlayer;getHeldItem(Lnet/minecraft/util/EnumHand;)Lnet/minecraft/item/ItemStack;", ordinal = 0))
     private ItemStack getItemStackTags(@Nonnull EntityPlayer playerIn, EnumHand enumHand) {

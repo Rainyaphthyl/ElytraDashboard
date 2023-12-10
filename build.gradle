@@ -61,9 +61,9 @@ jar {
     // The litemod task above generates the litemod.json dynamically, you can replace it with a resource if you want more control
     archivesBaseName = "${modFileName}"
     if (version.startsWith("undefin")) {
-        classifier = "mc${mcVersionOut}"
-    } else {
         classifier = "mc${mcVersionOut}+${gradle.buildTag}"
+    } else {
+        classifier = "mc${mcVersionOut}"
     }
     baseName = "mod-${archivesBaseName}"
     // Remove the "-mc1.12" suffix from the file name
