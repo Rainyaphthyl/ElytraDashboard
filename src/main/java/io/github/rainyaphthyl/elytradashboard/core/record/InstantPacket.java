@@ -25,6 +25,14 @@ public class InstantPacket {
      * The value of {@link DamageSource#FALL} reduced <b>only</b> by armors (with enchantments). Requires {@link InstantPacket#applyReducedDamages} invocation.
      */
     private float reducedFallingDamage = 0.0F;
+    /**
+     * The raw value of {@link DamageSource#FALL} at the potential landing level
+     */
+    private float completePotentialCrash = 0.0F;
+    /**
+     * The value of {@link DamageSource#FALL} reduced <b>only</b> by armors (with enchantments) at the potential landing level. Requires {@link InstantPacket#applyReducedDamages} invocation.
+     */
+    private float reducedPotentialCrash = 0.0F;
     private double altitude = 0.0;
     private double groundLevel = 0.0;
     private double height = 0.0;
@@ -63,6 +71,7 @@ public class InstantPacket {
         }
         reducedCollisionDamage = getReducedDamage(completeCollisionDamage, modifierCollision);
         reducedFallingDamage = getReducedDamage(completeFallingDamage, modifierFalling);
+        reducedPotentialCrash = getReducedDamage(completePotentialCrash, modifierFalling);
     }
 
     public void updateHeight(double altitudeIn, double groundLevelIn) {
@@ -105,6 +114,24 @@ public class InstantPacket {
      */
     public float getReducedFallingDamage() {
         return reducedFallingDamage;
+    }
+
+    /**
+     * The raw value of {@link DamageSource#FALL} at the potential landing level
+     */
+    public float getCompletePotentialCrash() {
+        return completePotentialCrash;
+    }
+
+    public void setCompletePotentialCrash(float completePotentialCrash) {
+        this.completePotentialCrash = Math.max(completePotentialCrash, 0.0F);
+    }
+
+    /**
+     * The value of {@link DamageSource#FALL} reduced <b>only</b> by armors (with enchantments) at the potential landing level. Requires {@link InstantPacket#applyReducedDamages} invocation.
+     */
+    public float getReducedPotentialCrash() {
+        return reducedPotentialCrash;
     }
 
     public double getGroundLevel() {

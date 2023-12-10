@@ -1,1 +1,4 @@
+import java.text.SimpleDateFormat
+
 rootProject.name = 'ElytraDashboard'
+gradle.ext.buildTag = (new SimpleDateFormat("yyyyMMdd.HHmmss.SSS.ZZZZ", Locale.CANADA_FRENCH)).format(new Date())
